@@ -1,0 +1,10 @@
+{
+  "name": "Day Progress",
+  "description": "Shows a progress bar/circle of your day",
+  "uuid": "day-progress@arcaege.github.io",
+  "shell-version": [
+    "46"
+  ],
+  "settings-schema": "org.gnome.shell.extensions.day-progress",
+  "url": "https://github.com/ArcaEge/day-progress"
+}
