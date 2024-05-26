@@ -20,11 +20,11 @@ export default class ExamplePreferences extends ExtensionPreferences {
         });
         page.add(appearance);
 
-        // Create a new preferences row
-        const show = new Adw.SwitchRow({
-            title: _('Show Panel Indicator'),
+        const resetTime = new Adw.PreferencesGroup({
+            title: _('Reset time'),
+            description: _('The time at which the bar resets'),
         });
-        appearance.add(show);
+        page.add(resetTime);
 
         const elapsed = new Adw.SwitchRow({
             title: _('Time Elapsed'),
@@ -48,24 +48,38 @@ export default class ExamplePreferences extends ExtensionPreferences {
             subtitle: _('Whether the ends of the bar rounded or not'),
         });
         appearance.add(circular);
-        // const remaining = new Adw.PreferencesGroup({
-        //     title: _('Elapsed or remaining'),
-        //     description: _('Whether to count up or down'),
-        // });
-        // page.add(remaining);
 
-        // Create a settings object and bind show to the `show-indicator` key
+        const resetHour = new Adw.SpinRow({
+            title: _("Hours"),
+            adjustment: new Gtk.Adjustment({
+                lower: 0,
+                upper: 23,
+                step_increment: 1
+            })
+        });
+        resetTime.add(resetHour);
+
+        const resetMinute = new Adw.SpinRow({
+            title: _("Minutes"),
+            adjustment: new Gtk.Adjustment({
+                lower: 0,
+                upper: 59,
+                step_increment: 1
+            })
+        });
+        resetTime.add(resetMinute);
+
         window._settings = this.getSettings();
-        window._settings.bind('show-indicator', show, 'active',
-            Gio.SettingsBindFlags.DEFAULT);
-
         window._settings.bind('show-elapsed', elapsed, 'active',
             Gio.SettingsBindFlags.DEFAULT);
-        
         window._settings.bind('width', width, 'value',
             Gio.SettingsBindFlags.DEFAULT);
-        
         window._settings.bind('circular', circular, 'active',
+            Gio.SettingsBindFlags.DEFAULT);
+
+        window._settings.bind('reset-hour', resetHour, 'value',
+            Gio.SettingsBindFlags.DEFAULT);
+        window._settings.bind('reset-minute', resetMinute, 'value',
             Gio.SettingsBindFlags.DEFAULT);
     }
 }

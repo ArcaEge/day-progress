@@ -1,4 +1,3 @@
-import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 import Clutter from 'gi://Clutter';
 import St from 'gi://St';
@@ -7,20 +6,18 @@ import { Extension, gettext as _ } from 'resource:///org/gnome/shell/extensions/
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
 
-function mapNumber(number, inMin, inMax, outMin, outMax) {
-    return (number - inMin) * (outMax - outMin) / (inMax - inMin) + outMin;
-}
 
 export default class DayProgress extends Extension {
     enable() {
         // Create a panel button
         this._indicator = new PanelMenu.Button(0.5, this.metadata.name, false);
 
+        // Get settings
         this._settings = this.getSettings();
 
-        // Show elapsed instead of remaining
+        // Get show elapsed key
         this.showElapsed = this._settings.get_boolean('show-elapsed');
-        this._settings.connect('changed::show-elapsed', (settings, key) => {
+        this.showElapsedHandle = this._settings.connect('changed::show-elapsed', (settings, key) => {
             this.showElapsed = settings.get_boolean(key);
             this.updateBar();
         });
@@ -31,11 +28,7 @@ export default class DayProgress extends Extension {
         // Circular
         this.circular = this._settings.get_boolean('circular');
 
-        // this.text = new St.Label({
-        //     text: '',
-        //     y_align: Clutter.ActorAlign.CENTER,
-        // });
-
+        // Create UI elements
         this.box = new St.BoxLayout({
             // style: `border-width: 1px; border-color: rgba(220, 220, 220, 1); height: 20px; border-radius: 10px; background-color: rgb(255, 255, 255); width: 40px;`, // border-width: 1px; border-color: rgba(220, 220, 220, 1); height: 10px; border-radius: 10px; background-color: rgba(255, 255, 255, 0.2)
             xAlign: Clutter.ActorAlign.CENTER,
@@ -78,14 +71,13 @@ export default class DayProgress extends Extension {
         this.box.add_child(this.container);
         this.container.add_child(this.border);
         this.border.add_child(this.bar);
-        // this.box.add_child(this.text);
         this._indicator.add_child(this.box);
 
         // Add the indicator to the panel
         Main.panel.addToStatusArea(this.uuid, this._indicator);
 
         // Width
-        this._settings.connect('changed::width', (settings, key) => {
+        this.widthHandle = this._settings.connect('changed::width', (settings, key) => {
             this.width = settings.get_int(key) / 5;
             this.container.style = `width: ` + this.width + `em; ` + 'border-radius: ' + (this.circular ? 1 : 0.15 )+ 'em;';
             this.border.style = `width: ` + this.width + `em; ` + 'border-radius: ' + (this.circular ? 1 : 0.15 )+ 'em;';
@@ -95,42 +87,98 @@ export default class DayProgress extends Extension {
         // Circular
         this.container.style = `width: ` + this.width + `em; ` + 'border-radius: ' + (this.circular ? 1 : 0.3 )+ 'em;';
         this.border.style = `width: ` + this.width + `em; ` + 'border-radius: ' + (this.circular ? 1 : 0.3 )+ 'em;';
-        this._settings.connect('changed::circular', (settings, key) => {
+        this.circularHandle = this._settings.connect('changed::circular', (settings, key) => {
             this.circular = settings.get_boolean(key);
             this.container.style = `width: ` + this.width + `em; ` + 'border-radius: ' + (this.circular ? 1 : 0.3 )+ 'em;';
             this.border.style = `width: ` + this.width + `em; ` + 'border-radius: ' + (this.circular ? 1 : 0.3 )+ 'em;';
             this.updateBar();
         });
+        
+        // Reset times
+        this.resetHour = this._settings.get_int('reset-hour');
+        this.resetHourHandle = this._settings.connect('changed::reset-hour', (settings, key) => {
+            this.resetHour = settings.get_int(key);
+            this.updateBar();
+        });
 
+        this.resetMinute = this._settings.get_int('reset-minute');
+        this.resetMinuteHandle = this._settings.connect('changed::reset-minute', (settings, key) => {
+            this.resetMinute = settings.get_int(key);
+            this.updateBar();
+        });
+
+        // Update bar now to immediately populate it
         this.updateBar();
 
         this.timerID = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 1, () => {
             this.updateBar();
-            return true;
+            return GLib.SOURCE_CONTINUE;
         });
 
         // Add a menu item to open the preferences window
         this._indicator.menu.addAction(_('Preferences'),
             () => this.openPreferences());
-
-        // Create a new GSettings object, and bind the "show-indicator"
-        // setting to the "visible" property.
-        this._settings.bind('show-indicator', this._indicator, 'visible',
-            Gio.SettingsBindFlags.DEFAULT);
     }
 
+    // Update the bar
     updateBar() {
         const localDateTime = GLib.DateTime.new_now_local();
-        const percentElapsedOfDay = (localDateTime.get_hour() + localDateTime.get_minute() / 60 + localDateTime.get_second() / 3600) / 24;
+        const percentElapsedOfDay = (((localDateTime.get_hour() + localDateTime.get_minute() / 60 + localDateTime.get_second() / 3600) / 24) -
+            (this.resetHour / 24 + this.resetMinute / (60 * 24)) + 1) % 1;
         const percentRemainingOfDay = 1 - percentElapsedOfDay;
-        // this.text.text = this.width + '';
-        this.bar.style = `width: ` + mapNumber(this.showElapsed ? percentElapsedOfDay : percentRemainingOfDay, 0, 1, 0.0, this.width - 0.15) + `em;` + 'border-radius: ' + (this.circular ? 1 : 0.15 )+ 'em;';
+        this.bar.style = `width: ` + mapNumber(this.showElapsed ? percentElapsedOfDay : percentRemainingOfDay, 0, 1, 0.0, this.width - 0.15) +
+            `em;` + 'border-radius: ' + (this.circular ? 1 : 0.15 )+ 'em;';
     }
 
     disable() {
         this._indicator?.destroy();
-        GLib.source_remove(this.timerID);
         this._indicator = null;
+        this.box?.destroy();
+        this.box = null;
+        this.container?.destroy();
+        this.container = null;
+        this.border?.destroy();
+        this.border = null;
+        this.bar?.destroy();
+        this.bar = null;
+
+        this.showElapsed = null;
+        this.circular = null;
+        this.width = null;
+        this.resetHour = null;
+        this.resetMinute = null;
+
+        if (this.timerID) {
+            GLib.Source.remove(this.timerID);
+            this.timerID = null;
+        }
+
+        if (this.showElapsedHandle) {
+            global.settings.disconnect(this.showElapsedHandle);
+            this.showElapsedHandle = null;
+        }
+        if (this.widthHandle) {
+            global.settings.disconnect(this.widthHandle);
+            this.widthHandle = null;
+        }
+        if (this.circularHandle) {
+            global.settings.disconnect(this.circularHandle);
+            this.circularHandle = null;
+        }
+        if (this.resetHourHandle) {
+            global.settings.disconnect(this.resetHourHandle);
+            this.resetHourHandle = null;
+        }
+        if (this.resetMinuteHandle) {
+            global.settings.disconnect(this.resetMinuteHandle);
+            this.resetMinuteHandle = null;
+        }
+        
         this._settings = null;
     }
+}
+
+
+function mapNumber(number, inMin, inMax, outMin, outMax) {
+    return (number - inMin) * (outMax - outMin) / (inMax - inMin) + outMin;
 }

@@ -7,6 +7,7 @@
 .border {
     height: 1em;
     border-width: 0.1em;
+    overflow: hidden;
 }
 
 .container {
@@ -14,6 +15,4 @@
     height: 0.9em;
     background-color: rgba(255, 255, 255, 0.1);
     border-width: 0.1em;
-    overflow: hidden;
-    
 }

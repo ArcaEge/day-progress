@@ -1,6 +1,6 @@
 {
   "name": "Day Progress",
-  "description": "Shows a progress bar of your day",
+  "description": "Displays a (somewhat) customisable progress bar of your day in the top panel to help you track your time.",
   "uuid": "day-progress@arcaege.github.io",
   "shell-version": [
     "46"
