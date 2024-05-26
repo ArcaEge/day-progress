@@ -1,5 +1,6 @@
 import Gio from 'gi://Gio';
 import Adw from 'gi://Adw';
+import Gtk from 'gi://Gtk';
 
 import {ExtensionPreferences, gettext as _} from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
 
@@ -13,22 +14,58 @@ export default class ExamplePreferences extends ExtensionPreferences {
         });
         window.add(page);
 
-        const group = new Adw.PreferencesGroup({
+        const appearance = new Adw.PreferencesGroup({
             title: _('Appearance'),
             description: _('Configure the appearance of the extension'),
         });
-        page.add(group);
+        page.add(appearance);
 
         // Create a new preferences row
-        const row = new Adw.SwitchRow({
-            title: _('Show Indicator'),
-            subtitle: _('Whether to show the panel indicator'),
+        const show = new Adw.SwitchRow({
+            title: _('Show Panel Indicator'),
         });
-        group.add(row);
+        appearance.add(show);
 
-        // Create a settings object and bind the row to the `show-indicator` key
+        const elapsed = new Adw.SwitchRow({
+            title: _('Time Elapsed'),
+            subtitle: _('Whether to show time elapsed instead of remaining on the panel'),
+        });
+        appearance.add(elapsed);
+        
+        const width = new Adw.SpinRow({
+            title: _("Width"),
+            subtitle: _('Width of the bar (measured in fifth of an em), scales with font'),
+            adjustment: new Gtk.Adjustment({
+                lower: 1,
+                upper: 150,
+                step_increment: 1
+            })
+        });
+        appearance.add(width);
+
+        const circular = new Adw.SwitchRow({
+            title: _('Circular bar (experimental)'),
+            subtitle: _('Whether the ends of the bar rounded or not'),
+        });
+        appearance.add(circular);
+        // const remaining = new Adw.PreferencesGroup({
+        //     title: _('Elapsed or remaining'),
+        //     description: _('Whether to count up or down'),
+        // });
+        // page.add(remaining);
+
+        // Create a settings object and bind show to the `show-indicator` key
         window._settings = this.getSettings();
-        window._settings.bind('show-indicator', row, 'active',
+        window._settings.bind('show-indicator', show, 'active',
+            Gio.SettingsBindFlags.DEFAULT);
+
+        window._settings.bind('show-elapsed', elapsed, 'active',
+            Gio.SettingsBindFlags.DEFAULT);
+        
+        window._settings.bind('width', width, 'value',
+            Gio.SettingsBindFlags.DEFAULT);
+        
+        window._settings.bind('circular', circular, 'active',
             Gio.SettingsBindFlags.DEFAULT);
     }
 }

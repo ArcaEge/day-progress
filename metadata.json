@@ -1,6 +1,6 @@
 {
   "name": "Day Progress",
-  "description": "Shows a progress bar/circle of your day",
+  "description": "Shows a progress bar of your day",
   "uuid": "day-progress@arcaege.github.io",
   "shell-version": [
     "46"

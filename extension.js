@@ -16,15 +16,25 @@ export default class DayProgress extends Extension {
         // Create a panel button
         this._indicator = new PanelMenu.Button(0.5, this.metadata.name, false);
 
-        // Add an icon
-        this.icon = new St.Icon({
-            icon_name: 'face-laugh-symbolic',
-            style_class: 'system-status-icon',
+        this._settings = this.getSettings();
+
+        // Show elapsed instead of remaining
+        this.showElapsed = this._settings.get_boolean('show-elapsed');
+        this._settings.connect('changed::show-elapsed', (settings, key) => {
+            this.showElapsed = settings.get_boolean(key);
+            this.updateBar();
         });
-        this.text = new St.Label({
-            text: '',
-            y_align: Clutter.ActorAlign.CENTER,
-        });
+
+        // Width
+        this.width = this._settings.get_int('width') / 5;
+
+        // Circular
+        this.circular = this._settings.get_boolean('circular');
+
+        // this.text = new St.Label({
+        //     text: '',
+        //     y_align: Clutter.ActorAlign.CENTER,
+        // });
 
         this.box = new St.BoxLayout({
             // style: `border-width: 1px; border-color: rgba(220, 220, 220, 1); height: 20px; border-radius: 10px; background-color: rgb(255, 255, 255); width: 40px;`, // border-width: 1px; border-color: rgba(220, 220, 220, 1); height: 10px; border-radius: 10px; background-color: rgba(255, 255, 255, 0.2)
@@ -56,9 +66,8 @@ export default class DayProgress extends Extension {
             yAlign: Clutter.ActorAlign.CENTER,
             styleClass: 'border',
         });
-        
+
         this.bar = new St.Bin({
-            style: `width: 0.7em;`,
             styleClass: 'bar',
             yExpand: true,
             yAlign: Clutter.ActorAlign.CENTER,
@@ -70,12 +79,29 @@ export default class DayProgress extends Extension {
         this.container.add_child(this.border);
         this.border.add_child(this.bar);
         // this.box.add_child(this.text);
-        
         this._indicator.add_child(this.box);
-        
+
         // Add the indicator to the panel
         Main.panel.addToStatusArea(this.uuid, this._indicator);
-        
+
+        // Width
+        this._settings.connect('changed::width', (settings, key) => {
+            this.width = settings.get_int(key) / 5;
+            this.container.style = `width: ` + this.width + `em; ` + 'border-radius: ' + (this.circular ? 1 : 0.15 )+ 'em;';
+            this.border.style = `width: ` + this.width + `em; ` + 'border-radius: ' + (this.circular ? 1 : 0.15 )+ 'em;';
+            this.updateBar();
+        });
+
+        // Circular
+        this.container.style = `width: ` + this.width + `em; ` + 'border-radius: ' + (this.circular ? 1 : 0.3 )+ 'em;';
+        this.border.style = `width: ` + this.width + `em; ` + 'border-radius: ' + (this.circular ? 1 : 0.3 )+ 'em;';
+        this._settings.connect('changed::circular', (settings, key) => {
+            this.circular = settings.get_boolean(key);
+            this.container.style = `width: ` + this.width + `em; ` + 'border-radius: ' + (this.circular ? 1 : 0.3 )+ 'em;';
+            this.border.style = `width: ` + this.width + `em; ` + 'border-radius: ' + (this.circular ? 1 : 0.3 )+ 'em;';
+            this.updateBar();
+        });
+
         this.updateBar();
 
         this.timerID = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 1, () => {
@@ -84,30 +110,21 @@ export default class DayProgress extends Extension {
         });
 
         // Add a menu item to open the preferences window
-        this._indicator.menu.addAction(_('Update'),
-            () => this.updateBar());
-        
         this._indicator.menu.addAction(_('Preferences'),
             () => this.openPreferences());
 
         // Create a new GSettings object, and bind the "show-indicator"
         // setting to the "visible" property.
-        this._settings = this.getSettings();
         this._settings.bind('show-indicator', this._indicator, 'visible',
             Gio.SettingsBindFlags.DEFAULT);
-
-        // Watch for changes to a specific setting
-        this._settings.connect('changed::show-indicator', (settings, key) => {
-            console.debug(`${key} = ${settings.get_value(key).print(true)}`);
-        });
     }
 
     updateBar() {
         const localDateTime = GLib.DateTime.new_now_local();
         const percentElapsedOfDay = (localDateTime.get_hour() + localDateTime.get_minute() / 60 + localDateTime.get_second() / 3600) / 24;
         const percentRemainingOfDay = 1 - percentElapsedOfDay;
-        // this.text.text = percentRemainingOfDay.toString();
-        this.bar.style = `width: ` + mapNumber(percentElapsedOfDay, 0, 1, 0.0, 2.85) + `em;`;
+        // this.text.text = this.width + '';
+        this.bar.style = `width: ` + mapNumber(this.showElapsed ? percentElapsedOfDay : percentRemainingOfDay, 0, 1, 0.0, this.width - 0.15) + `em;` + 'border-radius: ' + (this.circular ? 1 : 0.15 )+ 'em;';
     }
 
     disable() {
