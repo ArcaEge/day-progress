@@ -79,21 +79,21 @@ export default class DayProgress extends Extension {
         // Width
         this.widthHandle = this._settings.connect('changed::width', (settings, key) => {
             this.width = settings.get_int(key) / 5;
-            this.container.style = `width: ` + this.width + `em; ` + 'border-radius: ' + (this.circular ? 1 : 0.15 )+ 'em;';
-            this.border.style = `width: ` + this.width + `em; ` + 'border-radius: ' + (this.circular ? 1 : 0.15 )+ 'em;';
+            this.container.style = `width: ` + this.width + `em; ` + 'border-radius: ' + (this.circular ? 1 : 0.15) + 'em;';
+            this.border.style = `width: ` + this.width + `em; ` + 'border-radius: ' + (this.circular ? 1 : 0.15) + 'em;';
             this.updateBar();
         });
 
         // Circular
-        this.container.style = `width: ` + this.width + `em; ` + 'border-radius: ' + (this.circular ? 1 : 0.3 )+ 'em;';
-        this.border.style = `width: ` + this.width + `em; ` + 'border-radius: ' + (this.circular ? 1 : 0.3 )+ 'em;';
+        this.container.style = `width: ` + this.width + `em; ` + 'border-radius: ' + (this.circular ? 1 : 0.3) + 'em;';
+        this.border.style = `width: ` + this.width + `em; ` + 'border-radius: ' + (this.circular ? 1 : 0.3) + 'em;';
         this.circularHandle = this._settings.connect('changed::circular', (settings, key) => {
             this.circular = settings.get_boolean(key);
-            this.container.style = `width: ` + this.width + `em; ` + 'border-radius: ' + (this.circular ? 1 : 0.3 )+ 'em;';
-            this.border.style = `width: ` + this.width + `em; ` + 'border-radius: ' + (this.circular ? 1 : 0.3 )+ 'em;';
+            this.container.style = `width: ` + this.width + `em; ` + 'border-radius: ' + (this.circular ? 1 : 0.3) + 'em;';
+            this.border.style = `width: ` + this.width + `em; ` + 'border-radius: ' + (this.circular ? 1 : 0.3) + 'em;';
             this.updateBar();
         });
-        
+
         // Reset times
         this.resetHour = this._settings.get_int('reset-hour');
         this.resetHourHandle = this._settings.connect('changed::reset-hour', (settings, key) => {
@@ -127,7 +127,7 @@ export default class DayProgress extends Extension {
             (this.resetHour / 24 + this.resetMinute / (60 * 24)) + 1) % 1;
         const percentRemainingOfDay = 1 - percentElapsedOfDay;
         this.bar.style = `width: ` + mapNumber(this.showElapsed ? percentElapsedOfDay : percentRemainingOfDay, 0, 1, 0.0, this.width - 0.15) +
-            `em;` + 'border-radius: ' + (this.circular ? 1 : 0.15 )+ 'em;';
+            `em;` + 'border-radius: ' + (this.circular ? 1 : 0.15) + 'em;';
     }
 
     disable() {
@@ -173,7 +173,7 @@ export default class DayProgress extends Extension {
             global.settings.disconnect(this.resetMinuteHandle);
             this.resetMinuteHandle = null;
         }
-        
+
         this._settings = null;
     }
 }

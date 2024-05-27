@@ -2,7 +2,7 @@ import Gio from 'gi://Gio';
 import Adw from 'gi://Adw';
 import Gtk from 'gi://Gtk';
 
-import {ExtensionPreferences, gettext as _} from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
+import { ExtensionPreferences, gettext as _ } from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
 
 
 export default class ExamplePreferences extends ExtensionPreferences {
@@ -31,7 +31,7 @@ export default class ExamplePreferences extends ExtensionPreferences {
             subtitle: _('Whether to show time elapsed instead of remaining on the panel'),
         });
         appearance.add(elapsed);
-        
+
         const width = new Adw.SpinRow({
             title: _("Width"),
             subtitle: _('Width of the bar (measured in fifth of an em), scales with font'),
