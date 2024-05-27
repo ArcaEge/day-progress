@@ -136,23 +136,6 @@ export default class DayProgress extends Extension {
             this.timerID = null;
         }
 
-        this._indicator?.destroy();
-        this._indicator = null;
-        this.box?.destroy();
-        this.box = null;
-        this.container?.destroy();
-        this.container = null;
-        this.border?.destroy();
-        this.border = null;
-        this.bar?.destroy();
-        this.bar = null;
-
-        this.showElapsed = null;
-        this.circular = null;
-        this.width = null;
-        this.resetHour = null;
-        this.resetMinute = null;
-
         if (this.showElapsedHandle) {
             this._settings.disconnect(this.showElapsedHandle);
             this.showElapsedHandle = null;
@@ -173,6 +156,23 @@ export default class DayProgress extends Extension {
             this._settings.disconnect(this.resetMinuteHandle);
             this.resetMinuteHandle = null;
         }
+
+        this._indicator?.destroy();
+        this._indicator = null;
+        this.box?.destroy();
+        this.box = null;
+        this.container?.destroy();
+        this.container = null;
+        this.border?.destroy();
+        this.border = null;
+        this.bar?.destroy();
+        this.bar = null;
+
+        this.showElapsed = null;
+        this.circular = null;
+        this.width = null;
+        this.resetHour = null;
+        this.resetMinute = null;
 
         this._settings = null;
     }
