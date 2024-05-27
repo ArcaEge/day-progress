@@ -129,8 +129,13 @@ export default class DayProgress extends Extension {
         this.bar.style = `width: ` + mapNumber(this.showElapsed ? percentElapsedOfDay : percentRemainingOfDay, 0, 1, 0.0, this.width - 0.15) +
             `em;` + 'border-radius: ' + (this.circular ? 1 : 0.15) + 'em;';
     }
-
+    
     disable() {
+        if (this.timerID) {
+            GLib.Source.remove(this.timerID);
+            this.timerID = null;
+        }
+
         this._indicator?.destroy();
         this._indicator = null;
         this.box?.destroy();
@@ -148,29 +153,24 @@ export default class DayProgress extends Extension {
         this.resetHour = null;
         this.resetMinute = null;
 
-        if (this.timerID) {
-            GLib.Source.remove(this.timerID);
-            this.timerID = null;
-        }
-
         if (this.showElapsedHandle) {
-            global.settings.disconnect(this.showElapsedHandle);
+            this._settings.disconnect(this.showElapsedHandle);
             this.showElapsedHandle = null;
         }
         if (this.widthHandle) {
-            global.settings.disconnect(this.widthHandle);
+            this._settings.disconnect(this.widthHandle);
             this.widthHandle = null;
         }
         if (this.circularHandle) {
-            global.settings.disconnect(this.circularHandle);
+            this._settings.disconnect(this.circularHandle);
             this.circularHandle = null;
         }
         if (this.resetHourHandle) {
-            global.settings.disconnect(this.resetHourHandle);
+            this._settings.disconnect(this.resetHourHandle);
             this.resetHourHandle = null;
         }
         if (this.resetMinuteHandle) {
-            global.settings.disconnect(this.resetMinuteHandle);
+            this._settings.disconnect(this.resetMinuteHandle);
             this.resetMinuteHandle = null;
         }
 
