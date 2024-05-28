@@ -143,21 +143,22 @@ export default class DayProgress extends Extension {
             // Start time as a fraction of the day
             const startTimeFraction = this.startHour / 24 + this.startMinute / (60 * 24);
 
-            // If start time is in the future
-            if (startTimeFraction > currentTimeFraction) {
-                return 0
-            }
-            
             // End time as a fraction of the day
             const endTimeFraction = this.resetHour / 24 + this.resetMinute / (60 * 24);
-
-            // If reset time is in the past
-            if (endTimeFraction < currentTimeFraction) {
-                return 100
-            }
             
             // Duration of the period as a fraction of the day
             let periodDuration = endTimeFraction - startTimeFraction;
+
+            // If start time is in the future
+            if (startTimeFraction > currentTimeFraction && periodDuration > 0) {
+                return 0;
+            }
+
+            // If reset time is in the past
+            if ((endTimeFraction < currentTimeFraction && periodDuration > 0) || (endTimeFraction > currentTimeFraction && periodDuration <= 0)) {
+                return 100;
+            }
+            
             if (periodDuration <= 0) {
                 periodDuration += 1;  // Handle wrap around midnight
             }
@@ -171,7 +172,7 @@ export default class DayProgress extends Extension {
             // Calculate the percent elapsed of the period
             return (elapsedTime / periodDuration) % 1;
         })();
-        log(this.startHour, this.startMinute, percentElapsedOfPeriod);
+        // log(this.startHour, this.startMinute, percentElapsedOfPeriod);   // Commented out to avoid producing excessive logs, requirement for extension
         const percentRemainingOfDay = 1 - percentElapsedOfPeriod;
         this.bar.style = `width: ` + mapNumber(this.showElapsed ? percentElapsedOfPeriod : percentRemainingOfDay, 0, 1, 0.0, this.width - 0.15) +
             `em;` + 'border-radius: ' + (this.circular ? 1 : 0.15) + 'em;';

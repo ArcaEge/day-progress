@@ -25,11 +25,11 @@
         <range min="0" max="59"/>
     </key>
     <key type="i" name="reset-hour">
-        <default>23</default>
+        <default>0</default>
         <range min="0" max="23"/>
     </key>
     <key type="i" name="reset-minute">
-        <default>59</default>
+        <default>0</default>
         <range min="0" max="59"/>
     </key>
   </schema>
