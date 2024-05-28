@@ -20,6 +20,12 @@ export default class ExamplePreferences extends ExtensionPreferences {
         });
         page.add(appearance);
 
+        const startTime = new Adw.PreferencesGroup({
+            title: _('Start time'),
+            description: _('The time at which the bar start'),
+        });
+        page.add(startTime);
+
         const resetTime = new Adw.PreferencesGroup({
             title: _('Reset time'),
             description: _('The time at which the bar resets'),
@@ -49,6 +55,26 @@ export default class ExamplePreferences extends ExtensionPreferences {
         });
         appearance.add(circular);
 
+        const startHour = new Adw.SpinRow({
+            title: _("Hours"),
+            adjustment: new Gtk.Adjustment({
+                lower: 0,
+                upper: 23,
+                step_increment: 1
+            })
+        });
+        startTime.add(startHour);
+
+        const startMinute = new Adw.SpinRow({
+            title: _("Minutes"),
+            adjustment: new Gtk.Adjustment({
+                lower: 0,
+                upper: 59,
+                step_increment: 1
+            })
+        });
+        startTime.add(startMinute);
+
         const resetHour = new Adw.SpinRow({
             title: _("Hours"),
             adjustment: new Gtk.Adjustment({
@@ -75,6 +101,11 @@ export default class ExamplePreferences extends ExtensionPreferences {
         window._settings.bind('width', width, 'value',
             Gio.SettingsBindFlags.DEFAULT);
         window._settings.bind('circular', circular, 'active',
+            Gio.SettingsBindFlags.DEFAULT);
+
+        window._settings.bind('start-hour', startHour, 'value',
+            Gio.SettingsBindFlags.DEFAULT);
+        window._settings.bind('start-minute', startMinute, 'value',
             Gio.SettingsBindFlags.DEFAULT);
 
         window._settings.bind('reset-hour', resetHour, 'value',

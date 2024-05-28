@@ -94,6 +94,19 @@ export default class DayProgress extends Extension {
             this.updateBar();
         });
 
+        // Start time
+        this.startHour = this._settings.get_int('start-hour');
+        this.startHourHandle = this._settings.connect('changed::start-hour', (settings, key) => {
+            this.startHour = settings.get_int(key);
+            this.updateBar();
+        });
+
+        this.startMinute = this._settings.get_int('start-minute');
+        this.startMinuteHandle = this._settings.connect('changed::start-minute', (settings, key) => {
+            this.startMinute = settings.get_int(key);
+            this.updateBar();
+        });
+
         // Reset times
         this.resetHour = this._settings.get_int('reset-hour');
         this.resetHourHandle = this._settings.connect('changed::reset-hour', (settings, key) => {
@@ -123,10 +136,44 @@ export default class DayProgress extends Extension {
     // Update the bar
     updateBar() {
         const localDateTime = GLib.DateTime.new_now_local();
-        const percentElapsedOfDay = (((localDateTime.get_hour() + localDateTime.get_minute() / 60 + localDateTime.get_second() / 3600) / 24) -
-            (this.resetHour / 24 + this.resetMinute / (60 * 24)) + 1) % 1;
-        const percentRemainingOfDay = 1 - percentElapsedOfDay;
-        this.bar.style = `width: ` + mapNumber(this.showElapsed ? percentElapsedOfDay : percentRemainingOfDay, 0, 1, 0.0, this.width - 0.15) +
+        const percentElapsedOfPeriod = (() => {
+            // Current time as a fraction of the day
+            const currentTimeFraction = (localDateTime.get_hour() + localDateTime.get_minute() / 60 + localDateTime.get_second() / 3600) / 24;
+            
+            // Start time as a fraction of the day
+            const startTimeFraction = this.startHour / 24 + this.startMinute / (60 * 24);
+
+            // If start time is in the future
+            if (startTimeFraction > currentTimeFraction) {
+                return 0
+            }
+            
+            // End time as a fraction of the day
+            const endTimeFraction = this.resetHour / 24 + this.resetMinute / (60 * 24);
+
+            // If reset time is in the past
+            if (endTimeFraction < currentTimeFraction) {
+                return 100
+            }
+            
+            // Duration of the period as a fraction of the day
+            let periodDuration = endTimeFraction - startTimeFraction;
+            if (periodDuration <= 0) {
+                periodDuration += 1;  // Handle wrap around midnight
+            }
+            
+            // Elapsed time since the start of the period
+            let elapsedTime = currentTimeFraction - startTimeFraction;
+            if (elapsedTime < 0) {
+                elapsedTime += 1;  // Handle wrap around midnight
+            }
+            
+            // Calculate the percent elapsed of the period
+            return (elapsedTime / periodDuration) % 1;
+        })();
+        log(this.startHour, this.startMinute, percentElapsedOfPeriod);
+        const percentRemainingOfDay = 1 - percentElapsedOfPeriod;
+        this.bar.style = `width: ` + mapNumber(this.showElapsed ? percentElapsedOfPeriod : percentRemainingOfDay, 0, 1, 0.0, this.width - 0.15) +
             `em;` + 'border-radius: ' + (this.circular ? 1 : 0.15) + 'em;';
     }
     
@@ -147,6 +194,14 @@ export default class DayProgress extends Extension {
         if (this.circularHandle) {
             this._settings.disconnect(this.circularHandle);
             this.circularHandle = null;
+        }
+        if (this.startHourHandle) {
+            this._settings.disconnect(this.startHourHandle);
+            this.startHourHandle = null;
+        }
+        if (this.startMinuteHandle) {
+            this._settings.disconnect(this.startMinuteHandle);
+            this.startMinuteHandle = null;
         }
         if (this.resetHourHandle) {
             this._settings.disconnect(this.resetHourHandle);
@@ -171,6 +226,8 @@ export default class DayProgress extends Extension {
         this.showElapsed = null;
         this.circular = null;
         this.width = null;
+        this.startHour = null;
+        this.startMinute = null;
         this.resetHour = null;
         this.resetMinute = null;
 
