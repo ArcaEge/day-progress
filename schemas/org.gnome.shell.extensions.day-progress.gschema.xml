@@ -32,5 +32,12 @@
         <default>0</default>
         <range min="0" max="59"/>
     </key>
+    <key name="panel-position" type="i">
+			<default>2</default>
+			<range min="0" max="2"/>
+		</key>
+		<key name="panel-index" type="i">
+			<default>0</default>
+		</key>
   </schema>
 </schemalist>

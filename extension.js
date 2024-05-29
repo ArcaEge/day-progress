@@ -120,6 +120,21 @@ export default class DayProgress extends Extension {
             this.updateBar();
         });
 
+        // Panel position
+        this.panelPosition = this._settings.get_int('panel-position');
+        this.panelPositionHandle = this._settings.connect('changed::panel-position', (settings, key) => {
+            this.panelPosition = settings.get_int(key);
+            this.applyPosition();
+        });
+
+        this.panelIndex = this._settings.get_int('panel-index');
+        this.panelIndexHandle = this._settings.connect('changed::panel-index', (settings, key) => {
+            this.panelIndex = settings.get_int(key);
+            this.applyPosition();
+        });
+
+        this.applyPosition();
+
         // Update bar now to immediately populate it
         this.updateBar();
 
@@ -177,6 +192,18 @@ export default class DayProgress extends Extension {
         this.bar.style = `width: ` + mapNumber(this.showElapsed ? percentElapsedOfPeriod : percentRemainingOfDay, 0, 1, 0.0, this.width - 0.15) +
             `em;` + 'border-radius: ' + (this.circular ? 1 : 0.15) + 'em;';
     }
+
+    // Mostly copied from Noiseclapper@JordanViknar
+    applyPosition() {
+        const boxes = {
+            left: Main.panel._leftBox,
+            center: Main.panel._centerBox,
+            right: Main.panel._rightBox,
+        };
+        const position = this.panelPosition;
+        const index = this.panelIndex;
+        Main.panel._addToPanelBox(this.metadata.name, this._indicator, index, boxes[position === 0 ? 'left' : position === 1 ? 'center' : 'right']);
+    }
     
     disable() {
         if (this.timerID) {
@@ -212,6 +239,14 @@ export default class DayProgress extends Extension {
             this._settings.disconnect(this.resetMinuteHandle);
             this.resetMinuteHandle = null;
         }
+        if (this.panelPositionHandle) {
+            this._settings.disconnect(this.panelPositionHandle);
+            this.panelPositionHandle = null;
+        }
+        if (this.panelIndexHandle) {
+            this._settings.disconnect(this.panelIndexHandle);
+            this.panelIndexHandle = null;
+        }
 
         this._indicator?.destroy();
         this._indicator = null;
@@ -231,6 +266,8 @@ export default class DayProgress extends Extension {
         this.startMinute = null;
         this.resetHour = null;
         this.resetMinute = null;
+        this.panelPosition = null;
+        this.panelIndex = null;
 
         this._settings = null;
     }

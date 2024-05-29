@@ -20,6 +20,12 @@ export default class ExamplePreferences extends ExtensionPreferences {
         });
         page.add(appearance);
 
+        const panelPosition = new Adw.PreferencesGroup({
+            title: _('Panel Position'),
+            description: _('Where on the panel the bar will be displayed'),
+        });
+        page.add(panelPosition);
+
         const startTime = new Adw.PreferencesGroup({
             title: _('Start time'),
             description: _('The time at which the bar start'),
@@ -32,12 +38,14 @@ export default class ExamplePreferences extends ExtensionPreferences {
         });
         page.add(resetTime);
 
+        // Elapsed
         const elapsed = new Adw.SwitchRow({
             title: _('Time Elapsed'),
             subtitle: _('Whether to show time elapsed instead of remaining on the panel'),
         });
         appearance.add(elapsed);
 
+        // Width
         const width = new Adw.SpinRow({
             title: _("Width"),
             subtitle: _('Width of the bar (measured in fifth of an em), scales with font'),
@@ -49,12 +57,14 @@ export default class ExamplePreferences extends ExtensionPreferences {
         });
         appearance.add(width);
 
+        // Circular
         const circular = new Adw.SwitchRow({
             title: _('Circular bar (experimental)'),
             subtitle: _('Whether the ends of the bar rounded or not'),
         });
         appearance.add(circular);
 
+        // Start time
         const startHour = new Adw.SpinRow({
             title: _("Hours"),
             adjustment: new Gtk.Adjustment({
@@ -64,7 +74,6 @@ export default class ExamplePreferences extends ExtensionPreferences {
             })
         });
         startTime.add(startHour);
-
         const startMinute = new Adw.SpinRow({
             title: _("Minutes"),
             adjustment: new Gtk.Adjustment({
@@ -75,6 +84,7 @@ export default class ExamplePreferences extends ExtensionPreferences {
         });
         startTime.add(startMinute);
 
+        // Reset time
         const resetHour = new Adw.SpinRow({
             title: _("Hours"),
             adjustment: new Gtk.Adjustment({
@@ -84,7 +94,6 @@ export default class ExamplePreferences extends ExtensionPreferences {
             })
         });
         resetTime.add(resetHour);
-
         const resetMinute = new Adw.SpinRow({
             title: _("Minutes"),
             adjustment: new Gtk.Adjustment({
@@ -95,22 +104,44 @@ export default class ExamplePreferences extends ExtensionPreferences {
         });
         resetTime.add(resetMinute);
 
+        // Panel position
+        const positions = [_("Left"), _("Centre"), _("Right")];
+        let optionsList = new Gtk.StringList();
+        positions.forEach((it) => {
+            optionsList.append(it);
+        });
+        const positionRow = new Adw.ComboRow({
+            title: _("Position"),
+            subtitle: _("The side of the panel it is on"),
+            model: optionsList
+        });
+        panelPosition.add(positionRow);
+
+        // Panel index
+        const panelIndex = new Adw.SpinRow({
+            title: _("Index"),
+            subtitle: _("How far along the panel area it is"),
+            adjustment: new Gtk.Adjustment({
+                lower: 0,
+                upper: 256,
+                step_increment: 1
+            })
+        });
+        panelPosition.add(panelIndex);
+
+        // Bind
         window._settings = this.getSettings();
-        window._settings.bind('show-elapsed', elapsed, 'active',
-            Gio.SettingsBindFlags.DEFAULT);
-        window._settings.bind('width', width, 'value',
-            Gio.SettingsBindFlags.DEFAULT);
-        window._settings.bind('circular', circular, 'active',
-            Gio.SettingsBindFlags.DEFAULT);
+        window._settings.bind('show-elapsed', elapsed, 'active', Gio.SettingsBindFlags.DEFAULT);
+        window._settings.bind('width', width, 'value', Gio.SettingsBindFlags.DEFAULT);
+        window._settings.bind('circular', circular, 'active', Gio.SettingsBindFlags.DEFAULT);
 
-        window._settings.bind('start-hour', startHour, 'value',
-            Gio.SettingsBindFlags.DEFAULT);
-        window._settings.bind('start-minute', startMinute, 'value',
-            Gio.SettingsBindFlags.DEFAULT);
+        window._settings.bind('start-hour', startHour, 'value', Gio.SettingsBindFlags.DEFAULT);
+        window._settings.bind('start-minute', startMinute, 'value', Gio.SettingsBindFlags.DEFAULT);
 
-        window._settings.bind('reset-hour', resetHour, 'value',
-            Gio.SettingsBindFlags.DEFAULT);
-        window._settings.bind('reset-minute', resetMinute, 'value',
-            Gio.SettingsBindFlags.DEFAULT);
+        window._settings.bind('reset-hour', resetHour, 'value', Gio.SettingsBindFlags.DEFAULT);
+        window._settings.bind('reset-minute', resetMinute, 'value', Gio.SettingsBindFlags.DEFAULT);
+
+        window._settings.bind('panel-position', positionRow, 'selected', Gio.SettingsBindFlags.DEFAULT);
+        window._settings.bind('panel-index', panelIndex, 'value', Gio.SettingsBindFlags.DEFAULT);
     }
 }
