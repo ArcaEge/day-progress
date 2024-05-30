@@ -57,6 +57,18 @@ export default class ExamplePreferences extends ExtensionPreferences {
         });
         appearance.add(width);
 
+        // Height
+        const height = new Adw.SpinRow({
+            title: _("Height"),
+            subtitle: _('Height of the bar (measured in tenth of an em), scales with font'),
+            adjustment: new Gtk.Adjustment({
+                lower: 2,
+                upper: 50,
+                step_increment: 1
+            })
+        });
+        appearance.add(height);
+
         // Circular
         const circular = new Adw.SwitchRow({
             title: _('Circular bar (experimental)'),
@@ -133,6 +145,7 @@ export default class ExamplePreferences extends ExtensionPreferences {
         window._settings = this.getSettings();
         window._settings.bind('show-elapsed', elapsed, 'active', Gio.SettingsBindFlags.DEFAULT);
         window._settings.bind('width', width, 'value', Gio.SettingsBindFlags.DEFAULT);
+        window._settings.bind('height', height, 'value', Gio.SettingsBindFlags.DEFAULT);
         window._settings.bind('circular', circular, 'active', Gio.SettingsBindFlags.DEFAULT);
 
         window._settings.bind('start-hour', startHour, 'value', Gio.SettingsBindFlags.DEFAULT);
