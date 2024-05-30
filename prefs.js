@@ -60,10 +60,10 @@ export default class ExamplePreferences extends ExtensionPreferences {
         // Height
         const height = new Adw.SpinRow({
             title: _("Height"),
-            subtitle: _('Height of the bar (measured in fifth of an em), scales with font'),
+            subtitle: _('Height of the bar (measured in tenth of an em), scales with font'),
             adjustment: new Gtk.Adjustment({
-                lower: 1,
-                upper: 15,
+                lower: 2,
+                upper: 50,
                 step_increment: 1
             })
         });

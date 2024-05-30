@@ -29,7 +29,7 @@ export default class DayProgress extends Extension {
         this.width = this._settings.get_int('width') / 5;
 
         // Height
-        this.height = this._settings.get_int('height') / 5;
+        this.height = this._settings.get_int('height') / 10;
 
         // Circular
         this.circular = this._settings.get_boolean('circular');
@@ -91,7 +91,7 @@ export default class DayProgress extends Extension {
 
         // Height
         this.heightHandle = this._settings.connect('changed::height', (settings, key) => {
-            this.height = settings.get_int(key) / 5;
+            this.height = settings.get_int(key) / 10;
             this.calculateStyles();
             this.updateBar();
         });
@@ -159,8 +159,8 @@ export default class DayProgress extends Extension {
     }
 
     calculateStyles() {
-        this.container.style = `width: ` + this.width + `em; ` + `height: ` + this.height + `em; ` + 'border-radius: ' + (this.circular ? 1 : 0.3) + 'em;';;
-        this.border.style = `width: ` + this.width + `em; ` + `height: ` + this.height + `em; ` + 'border-radius: ' + (this.circular ? 1 : 0.3) + 'em;';;
+        this.container.style = `width: ` + this.width + `em; ` + `height: ` + this.height + `em; ` + 'border-radius: ' + (this.circular ? 1 : 0.3) + 'em;';
+        this.border.style = `width: ` + this.width + `em; ` + `height: ` + this.height + `em; ` + 'border-radius: ' + (this.circular ? 1 : 0.3) + 'em;';
     }
 
     // Update the bar
@@ -204,7 +204,7 @@ export default class DayProgress extends Extension {
         })();
         const percentRemainingOfDay = 1 - percentElapsedOfPeriod;
         this.bar.style = `width: ` + mapNumber(this.showElapsed ? percentElapsedOfPeriod : percentRemainingOfDay, 0, 1, 0.0, this.width - 0.15) +
-            `em; ` + `height: ` + this.height + `em; ` + 'border-radius: ' + (this.circular ? 1 : 0.30) + 'em;';
+            `em; ` + `height: ` + this.height + `em; ` + 'border-radius: ' + (this.circular ? 1 : 0.15) + 'em;';    // Needs to be 0.15, half of border curve as it is a smaller corner
     }
 
     // Mostly copied from Noiseclapper@JordanViknar
@@ -283,6 +283,7 @@ export default class DayProgress extends Extension {
         this.showElapsed = null;
         this.circular = null;
         this.width = null;
+        this.height = null;
         this.startHour = null;
         this.startMinute = null;
         this.resetHour = null;
