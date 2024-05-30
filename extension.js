@@ -9,6 +9,9 @@ import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
 
 export default class DayProgress extends Extension {
     enable() {
+        // Uncomment for easier debug
+        // global.dayprogress = this;
+
         // Create a panel button
         this._indicator = new PanelMenu.Button(0.5, this.metadata.name, false);
 
@@ -24,6 +27,9 @@ export default class DayProgress extends Extension {
 
         // Width
         this.width = this._settings.get_int('width') / 5;
+
+        // Height
+        this.height = this._settings.get_int('height') / 5;
 
         // Circular
         this.circular = this._settings.get_boolean('circular');
@@ -79,18 +85,21 @@ export default class DayProgress extends Extension {
         // Width
         this.widthHandle = this._settings.connect('changed::width', (settings, key) => {
             this.width = settings.get_int(key) / 5;
-            this.container.style = `width: ` + this.width + `em; ` + 'border-radius: ' + (this.circular ? 1 : 0.15) + 'em;';
-            this.border.style = `width: ` + this.width + `em; ` + 'border-radius: ' + (this.circular ? 1 : 0.15) + 'em;';
+            this.calculateStyles();
+            this.updateBar();
+        });
+
+        // Height
+        this.heightHandle = this._settings.connect('changed::height', (settings, key) => {
+            this.height = settings.get_int(key) / 5;
+            this.calculateStyles();
             this.updateBar();
         });
 
         // Circular
-        this.container.style = `width: ` + this.width + `em; ` + 'border-radius: ' + (this.circular ? 1 : 0.3) + 'em;';
-        this.border.style = `width: ` + this.width + `em; ` + 'border-radius: ' + (this.circular ? 1 : 0.3) + 'em;';
         this.circularHandle = this._settings.connect('changed::circular', (settings, key) => {
             this.circular = settings.get_boolean(key);
-            this.container.style = `width: ` + this.width + `em; ` + 'border-radius: ' + (this.circular ? 1 : 0.3) + 'em;';
-            this.border.style = `width: ` + this.width + `em; ` + 'border-radius: ' + (this.circular ? 1 : 0.3) + 'em;';
+            this.calculateStyles();
             this.updateBar();
         });
 
@@ -134,6 +143,7 @@ export default class DayProgress extends Extension {
         });
 
         this.applyPosition();
+        this.calculateStyles();
 
         // Update bar now to immediately populate it
         this.updateBar();
@@ -146,6 +156,11 @@ export default class DayProgress extends Extension {
         // Add a menu item to open the preferences window
         this._indicator.menu.addAction(_('Preferences'),
             () => this.openPreferences());
+    }
+
+    calculateStyles() {
+        this.container.style = `width: ` + this.width + `em; ` + `height: ` + this.height + `em; ` + 'border-radius: ' + (this.circular ? 1 : 0.3) + 'em;';;
+        this.border.style = `width: ` + this.width + `em; ` + `height: ` + this.height + `em; ` + 'border-radius: ' + (this.circular ? 1 : 0.3) + 'em;';;
     }
 
     // Update the bar
@@ -187,10 +202,9 @@ export default class DayProgress extends Extension {
             // Calculate the percent elapsed of the period
             return (elapsedTime / periodDuration) % 1;
         })();
-        // log(this.startHour, this.startMinute, percentElapsedOfPeriod);   // Commented out to avoid producing excessive logs, requirement for extension
         const percentRemainingOfDay = 1 - percentElapsedOfPeriod;
         this.bar.style = `width: ` + mapNumber(this.showElapsed ? percentElapsedOfPeriod : percentRemainingOfDay, 0, 1, 0.0, this.width - 0.15) +
-            `em;` + 'border-radius: ' + (this.circular ? 1 : 0.15) + 'em;';
+            `em; ` + `height: ` + this.height + `em; ` + 'border-radius: ' + (this.circular ? 1 : 0.30) + 'em;';
     }
 
     // Mostly copied from Noiseclapper@JordanViknar
@@ -206,6 +220,9 @@ export default class DayProgress extends Extension {
     }
     
     disable() {
+        // Uncomment for easier debug
+        // delete global.dayprogress;
+
         if (this.timerID) {
             GLib.Source.remove(this.timerID);
             this.timerID = null;
@@ -218,6 +235,10 @@ export default class DayProgress extends Extension {
         if (this.widthHandle) {
             this._settings.disconnect(this.widthHandle);
             this.widthHandle = null;
+        }
+        if (this.heightHandle) {
+            this._settings.disconnect(this.heightHandle);
+            this.heightHandle = null;
         }
         if (this.circularHandle) {
             this._settings.disconnect(this.circularHandle);
