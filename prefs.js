@@ -28,7 +28,7 @@ export default class ExamplePreferences extends ExtensionPreferences {
 
         const startTime = new Adw.PreferencesGroup({
             title: _('Start time'),
-            description: _('The time at which the bar start'),
+            description: _('The time at which the bar starts'),
         });
         page.add(startTime);
 
