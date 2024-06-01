@@ -28,7 +28,7 @@ export default class ExamplePreferences extends ExtensionPreferences {
 
         const startTime = new Adw.PreferencesGroup({
             title: _('Start time'),
-            description: _('The time at which the bar start'),
+            description: _('The time at which the bar starts'),
         });
         page.add(startTime);
 
@@ -134,8 +134,8 @@ export default class ExamplePreferences extends ExtensionPreferences {
             title: _("Index"),
             subtitle: _("How far along the panel area it is"),
             adjustment: new Gtk.Adjustment({
-                lower: 0,
-                upper: 256,
+                lower: -128,
+                upper: 127,
                 step_increment: 1
             })
         });
