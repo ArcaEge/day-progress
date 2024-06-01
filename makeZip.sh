@@ -24,6 +24,9 @@ rm -r  ./makeZip.sh
 echo "Zipping it up"
 zip -r ../day-progress@arcaege.github.io.zip ./
 
-echo "Done!"
-
+# Open website and folder in default apps
+echo "Opening website and file browser"
+xdg-open https://extensions.gnome.org/upload/
 xdg-open ..
+
+echo "Done!"
