@@ -1,20 +1,22 @@
 #!/bin/bash
 
-# Remove /tmp/day-progress-gnome-extension if exists
-rm -rf /tmp/day-progress-gnome-extension
+extensionName="day-progress@arcaege.github.io"
+
+# Remove directory if exists
+rm -rf /tmp/gnome-extension
 
 # Re-create it
 echo "Creating folders"
-mkdir /tmp/day-progress-gnome-extension
-mkdir /tmp/day-progress-gnome-extension/day-progress@arcaege.github.io
+mkdir /tmp/gnome-extension
+mkdir /tmp/gnome-extension/$extensionName
 
 # Copy all files
 echo "Copying files"
-cp -r ./ /tmp/day-progress-gnome-extension/day-progress@arcaege.github.io/
+cp -r ~/.local/share/gnome-shell/extensions/$extensionName/* /tmp/gnome-extension/$extensionName/
 
 # Remove unnecessary files/folders
 echo "Removing unnecessary files"
-cd /tmp/day-progress-gnome-extension/day-progress@arcaege.github.io
+cd /tmp/gnome-extension/$extensionName
 rm -rf ./.git
 rm -rf ./docs
 rm -r  ./README.md
@@ -22,7 +24,7 @@ rm -r  ./makeZip.sh
 
 # Zip files
 echo "Zipping it up"
-zip -r ../day-progress@arcaege.github.io.zip ./
+zip -r ../$extensionName.zip ./
 
 # Open website and folder in default apps
 echo "Opening website and file browser"
