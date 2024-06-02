@@ -5,6 +5,7 @@ import St from 'gi://St';
 import { Extension, gettext as _ } from 'resource:///org/gnome/shell/extensions/extension.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
+import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 
 
 export default class DayProgress extends Extension {
@@ -20,10 +21,6 @@ export default class DayProgress extends Extension {
 
         // Get show elapsed key
         this.showElapsed = this._settings.get_boolean('show-elapsed');
-        this.showElapsedHandle = this._settings.connect('changed::show-elapsed', (settings, key) => {
-            this.showElapsed = settings.get_boolean(key);
-            this.updateBar();
-        });
 
         // Width
         this.width = this._settings.get_int('width') / 5;
@@ -79,8 +76,40 @@ export default class DayProgress extends Extension {
         this.border.add_child(this.bar);
         this._indicator.add_child(this.box);
 
+        this.menuElapsedContainer = new PopupMenu.PopupBaseMenuItem({ reactive: false });
+        this.elapsedLabel = new St.Label({
+            text: 'Elapsed',
+            xAlign: Clutter.ActorAlign.START,
+            xExpand: true,
+            styleClass: 'label',
+        });
+        this.elapsedValue = new St.Label({
+            text: '',
+        });
+        this.menuElapsedContainer.add_child(this.elapsedLabel);
+        this.menuElapsedContainer.add_child(this.elapsedValue);
+
+        this.menuRemainingContainer = new PopupMenu.PopupBaseMenuItem({ reactive: false });
+        this.remainingLabel = new St.Label({
+            text: 'Remaining',
+            xAlign: Clutter.ActorAlign.START,
+            xExpand: true,
+            styleClass: 'label',
+        });
+        this.remainingValue = new St.Label({
+            text: '',
+        });
+        this.menuRemainingContainer.add_child(this.remainingLabel);
+        this.menuRemainingContainer.add_child(this.remainingValue);
+
         // Add the indicator to the panel
         Main.panel.addToStatusArea(this.uuid, this._indicator);
+
+        // Show elapsed
+        this.showElapsedHandle = this._settings.connect('changed::show-elapsed', (settings, key) => {
+            this.showElapsed = settings.get_boolean(key);
+            this.updateBar();
+        });
 
         // Width
         this.widthHandle = this._settings.connect('changed::width', (settings, key) => {
@@ -153,6 +182,8 @@ export default class DayProgress extends Extension {
             return GLib.SOURCE_CONTINUE;
         });
 
+        this._indicator.menu.addMenuItem(this.menuElapsedContainer);
+        this._indicator.menu.addMenuItem(this.menuRemainingContainer);
         // Add a menu item to open the preferences window
         this._indicator.menu.addAction(_('Preferences'),
             () => this.openPreferences());
@@ -166,45 +197,38 @@ export default class DayProgress extends Extension {
     // Update the bar
     updateBar() {
         const localDateTime = GLib.DateTime.new_now_local();
+        // Start time as a fraction of the day
+        const startTimeFraction = this.startHour / 24 + this.startMinute / (60 * 24);
+        // End time as a fraction of the day
+        const endTimeFraction = this.resetHour / 24 + this.resetMinute / (60 * 24);
+
         const percentElapsedOfPeriod = (() => {
             // Current time as a fraction of the day
             const currentTimeFraction = (localDateTime.get_hour() + localDateTime.get_minute() / 60 + localDateTime.get_second() / 3600) / 24;
-            
-            // Start time as a fraction of the day
-            const startTimeFraction = this.startHour / 24 + this.startMinute / (60 * 24);
 
-            // End time as a fraction of the day
-            const endTimeFraction = this.resetHour / 24 + this.resetMinute / (60 * 24);
-            
-            // Duration of the period as a fraction of the day
-            let periodDuration = endTimeFraction - startTimeFraction;
-
-            // If start time is in the future
-            if (startTimeFraction > currentTimeFraction && periodDuration > 0) {
-                return 0;
+            // No midnight wrap around
+            if (endTimeFraction > startTimeFraction) {
+                return mapNumber(clamp(currentTimeFraction, startTimeFraction, endTimeFraction), startTimeFraction, endTimeFraction, 0, 1);
             }
 
-            // If reset time is in the past
-            if ((endTimeFraction < currentTimeFraction && periodDuration > 0) || (endTimeFraction > currentTimeFraction && periodDuration <= 0)) {
-                return 100;
-            }
-            
-            if (periodDuration <= 0) {
-                periodDuration += 1;  // Handle wrap around midnight
-            }
-            
-            // Elapsed time since the start of the period
-            let elapsedTime = currentTimeFraction - startTimeFraction;
-            if (elapsedTime < 0) {
-                elapsedTime += 1;  // Handle wrap around midnight
-            }
-            
-            // Calculate the percent elapsed of the period
-            return (elapsedTime / periodDuration) % 1;
+            // There is midnight wrap around
+            if (currentTimeFraction >= endTimeFraction && currentTimeFraction < startTimeFraction) return 1;
+            const durationFraction = (1 - (startTimeFraction - endTimeFraction));
+            const offset = 1 - startTimeFraction;
+            const offsettedTimeFraction = (currentTimeFraction + 1 + offset) % 1;
+            return mapNumber(clamp(offsettedTimeFraction, 0, durationFraction), 0, durationFraction, 0, 1);
         })();
-        const percentRemainingOfDay = 1 - percentElapsedOfPeriod;
-        this.bar.style = `width: ` + mapNumber(this.showElapsed ? percentElapsedOfPeriod : percentRemainingOfDay, 0, 1, 0.0, this.width - 0.15) +
+        const percentRemainingOfPeriod = 1 - percentElapsedOfPeriod;
+        this.bar.style = `width: ` + mapNumber(this.showElapsed ? percentElapsedOfPeriod : percentRemainingOfPeriod, 0, 1, 0.0, this.width - 0.15) +
             `em; ` + `height: ` + this.height + `em; ` + 'border-radius: ' + (this.circular ? 1 : 0.15) + 'em;';    // Needs to be 0.15, half of border curve as it is a smaller corner
+
+        const duration = endTimeFraction > startTimeFraction ? (endTimeFraction - startTimeFraction) : (1 - (startTimeFraction - endTimeFraction));
+        const elapsedHours = Math.floor(percentElapsedOfPeriod * duration * 24);
+        const elapsedMinutes = Math.floor((percentElapsedOfPeriod * duration * 24 * 60) % 60);
+        const remainingHours = Math.floor(percentRemainingOfPeriod * duration * 24);
+        const remainingMinutes = Math.floor((percentRemainingOfPeriod * duration * 24 * 60) % 60);
+        this.elapsedValue.text = elapsedHours + 'h ' + elapsedMinutes + 'm' + ' | ' + Math.round(percentElapsedOfPeriod * 100) + '%';
+        this.remainingValue.text = remainingHours + 'h ' + remainingMinutes + 'm' + ' | ' + Math.round(percentRemainingOfPeriod * 100) + '%';
     }
 
     // Mostly copied from Noiseclapper@JordanViknar
@@ -218,7 +242,7 @@ export default class DayProgress extends Extension {
         const index = this.panelIndex;
         Main.panel._addToPanelBox(this.metadata.name, this._indicator, index, boxes[position === 0 ? 'left' : position === 1 ? 'center' : 'right']);
     }
-    
+
     disable() {
         // Uncomment for easier debug
         // delete global.dayprogress;
@@ -295,7 +319,10 @@ export default class DayProgress extends Extension {
     }
 }
 
-
 function mapNumber(number, inMin, inMax, outMin, outMax) {
     return (number - inMin) * (outMax - outMin) / (inMax - inMin) + outMin;
+}
+
+function clamp(number, min, max) {
+    return Math.max(min, Math.min(number, max));
 }
