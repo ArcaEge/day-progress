@@ -303,6 +303,18 @@ export default class DayProgress extends Extension {
         this.border = null;
         this.bar?.destroy();
         this.bar = null;
+        this.menuElapsedContainer?.destroy();
+        this.menuElapsedContainer = null;
+        this.menuRemainingContainer?.destroy();
+        this.menuRemainingContainer = null;
+        this.elapsedLabel?.destroy();
+        this.elapsedLabel = null;
+        this.remainingLabel?.destroy();
+        this.remainingLabel = null;
+        this.elapsedValue?.destroy();
+        this.elapsedValue = null;
+        this.remainingValue?.destroy();
+        this.remainingValue = null;
 
         this.showElapsed = null;
         this.circular = null;
