@@ -293,28 +293,28 @@ export default class DayProgress extends Extension {
             this.panelIndexHandle = null;
         }
 
-        this._indicator?.destroy();
-        this._indicator = null;
-        this.box?.destroy();
-        this.box = null;
-        this.container?.destroy();
-        this.container = null;
-        this.border?.destroy();
-        this.border = null;
-        this.bar?.destroy();
-        this.bar = null;
-        this.menuElapsedContainer?.destroy();
-        this.menuElapsedContainer = null;
-        this.menuRemainingContainer?.destroy();
-        this.menuRemainingContainer = null;
-        this.elapsedLabel?.destroy();
-        this.elapsedLabel = null;
-        this.remainingLabel?.destroy();
-        this.remainingLabel = null;
-        this.elapsedValue?.destroy();
-        this.elapsedValue = null;
         this.remainingValue?.destroy();
         this.remainingValue = null;
+        this.elapsedValue?.destroy();
+        this.elapsedValue = null;
+        this.remainingLabel?.destroy();
+        this.remainingLabel = null;
+        this.elapsedLabel?.destroy();
+        this.elapsedLabel = null;
+        this.menuRemainingContainer?.destroy();
+        this.menuRemainingContainer = null;
+        this.menuElapsedContainer?.destroy();
+        this.menuElapsedContainer = null;
+        this.bar?.destroy();
+        this.bar = null;
+        this.border?.destroy();
+        this.border = null;
+        this.container?.destroy();
+        this.container = null;
+        this.box?.destroy();
+        this.box = null;
+        this._indicator?.destroy();
+        this._indicator = null;
 
         this.showElapsed = null;
         this.circular = null;
