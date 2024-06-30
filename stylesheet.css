@@ -3,7 +3,7 @@
 }
 
 .bar-classic {
-    background: rgba(0, 0, 0, 1);
+    background: rgba(40, 40, 40, 1);
 }
 
 .border {
@@ -18,8 +18,8 @@
 }
 
 .container-classic {
-    border-color: rgba(0, 0, 0, 0.7);
-    background-color: rgba(0, 0, 0, 0.1);
+    border-color: rgba(40, 40, 40, 0.7);
+    background-color: rgba(40, 40, 40, 0.1);
     border-width: 0.1em;
 }
 

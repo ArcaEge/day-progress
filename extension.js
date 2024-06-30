@@ -1,4 +1,5 @@
 import GLib from 'gi://GLib';
+import Gio from 'gi://Gio';
 import Clutter from 'gi://Clutter';
 import St from 'gi://St';
 
@@ -15,6 +16,13 @@ export default class DayProgress extends Extension {
         
         // Get if using GNOME classic
         this.isUsingClassic = GLib.getenv('GNOME_SHELL_SESSION_MODE') == "classic";
+
+        // Light styles
+        this.colorSchemeSettings = new Gio.Settings({
+            schema_id: 'org.gnome.desktop.interface',
+        });
+
+        this.lightColorScheme = Main.sessionMode.colorScheme == 'prefer-light' && this.colorSchemeSettings.get_string('color-scheme') == 'default';
 
         // Create a panel button
         this._indicator = new PanelMenu.Button(0.5, this.metadata.name, false);
@@ -52,7 +60,7 @@ export default class DayProgress extends Extension {
             xAlign: Clutter.ActorAlign.CENTER,
             yAlign: Clutter.ActorAlign.CENTER,
             style: ``, // width: 2.5em; height: 0.85em; background-color: rgba(255, 255, 255, 0.0); border-radius: 1em; border-width: 0.1em; overflow: hidden;
-            styleClass: this.isUsingClassic ? 'container-classic' : 'container',
+            styleClass: this.isUsingClassic || this.lightColorScheme ? 'container-classic' : 'container',
         });
 
         this.border = new St.Bin({
@@ -67,7 +75,7 @@ export default class DayProgress extends Extension {
         });
 
         this.bar = new St.Bin({
-            styleClass: this.isUsingClassic ? 'bar-classic' : 'bar',
+            styleClass: this.isUsingClassic || this.lightColorScheme ? 'bar-classic' : 'bar',
             yExpand: true,
             yAlign: Clutter.ActorAlign.CENTER,
             xAlign: Clutter.ActorAlign.START,
@@ -180,6 +188,9 @@ export default class DayProgress extends Extension {
         // Update bar now to immediately populate it
         this.updateBar();
 
+        // Light styles
+        this.colorSchemeChanged();
+
         this.timerID = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 1, () => {
             this.updateBar();
             return GLib.SOURCE_CONTINUE;
@@ -192,6 +203,13 @@ export default class DayProgress extends Extension {
             () => this.openPreferences());
     }
 
+    // Support for light panel through extensions such as Light Style
+    colorSchemeChanged() {
+        this.lightColorScheme = Main.sessionMode.colorScheme == 'prefer-light' && this.colorSchemeSettings.get_string('color-scheme') == 'default';
+        this.container.styleClass = this.isUsingClassic || this.lightColorScheme ? 'container-classic' : 'container';
+        this.bar.styleClass = this.isUsingClassic || this.lightColorScheme ? 'bar-classic' : 'bar';
+    }
+
     calculateStyles() {
         this.container.style = `width: ` + this.width + `em; ` + `height: ` + this.height + `em; ` + 'border-radius: ' + (this.circular ? 1 : 0.3) + 'em;';
         this.border.style = `width: ` + this.width + `em; ` + `height: ` + this.height + `em; ` + 'border-radius: ' + (this.circular ? 1 : 0.3) + 'em;';
@@ -199,6 +217,9 @@ export default class DayProgress extends Extension {
 
     // Update the bar
     updateBar() {
+        // TODO: convert this to a listener
+        this.colorSchemeChanged();
+
         const localDateTime = GLib.DateTime.new_now_local();
         // Start time as a fraction of the day
         const startTimeFraction = this.startHour / 24 + this.startMinute / (60 * 24);
