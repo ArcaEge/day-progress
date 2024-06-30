@@ -24,6 +24,9 @@ Firstly, have look at [this](https://github.com/users/ArcaEge/projects/1/views/1
 
 ![Screenshot 2](docs/images/screenshot2.png)
 
+### Also works under GNOME Classic
+![Screenshot 6](docs/images/screenshot6.png)
+
 ### Settings
 
 ![Screenshot 5](docs/images/screenshot5.png)

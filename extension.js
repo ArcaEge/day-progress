@@ -12,6 +12,9 @@ export default class DayProgress extends Extension {
     enable() {
         // Uncomment for easier debug
         // global.dayprogress = this;
+        
+        // Get if using GNOME classic
+        this.isUsingClassic = GLib.getenv('GNOME_SHELL_SESSION_MODE') == "classic";
 
         // Create a panel button
         this._indicator = new PanelMenu.Button(0.5, this.metadata.name, false);
@@ -49,7 +52,7 @@ export default class DayProgress extends Extension {
             xAlign: Clutter.ActorAlign.CENTER,
             yAlign: Clutter.ActorAlign.CENTER,
             style: ``, // width: 2.5em; height: 0.85em; background-color: rgba(255, 255, 255, 0.0); border-radius: 1em; border-width: 0.1em; overflow: hidden;
-            styleClass: 'container',
+            styleClass: this.isUsingClassic ? 'container-classic' : 'container',
         });
 
         this.border = new St.Bin({
@@ -64,7 +67,7 @@ export default class DayProgress extends Extension {
         });
 
         this.bar = new St.Bin({
-            styleClass: 'bar',
+            styleClass: this.isUsingClassic ? 'bar-classic' : 'bar',
             yExpand: true,
             yAlign: Clutter.ActorAlign.CENTER,
             xAlign: Clutter.ActorAlign.START,
