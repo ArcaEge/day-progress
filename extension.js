@@ -191,7 +191,7 @@ export default class DayProgress extends Extension {
         // Light styles
         this.colorSchemeChanged();
 
-        this.timerID = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 1, () => {
+        this.timerID = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 10, () => {
             this.updateBar();
             return GLib.SOURCE_CONTINUE;
         });
