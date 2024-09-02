@@ -3,7 +3,8 @@
   "description": "Displays a (somewhat) customisable progress bar of your day in the top panel to help you track your time.",
   "uuid": "day-progress@arcaege.github.io",
   "shell-version": [
-    "46"
+    "46",
+    "47"
   ],
   "settings-schema": "org.gnome.shell.extensions.day-progress",
   "url": "https://github.com/ArcaEge/day-progress"
