@@ -352,6 +352,7 @@ export default class DayProgress extends Extension {
         this.panelIndex = null;
 
         this._settings = null;
+        this.colorSchemeSettings = null;
     }
 }
 
