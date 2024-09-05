@@ -21,34 +21,34 @@ export default class ExamplePreferences extends ExtensionPreferences {
         page.add(appearance);
 
         const panelPosition = new Adw.PreferencesGroup({
-            title: _('Panel Position'),
-            description: _('Where on the panel the bar will be displayed'),
+            title: _('Panel position'),
+            description: _('Where on the panel the indicator will be displayed'),
         });
         page.add(panelPosition);
 
         const startTime = new Adw.PreferencesGroup({
             title: _('Start time'),
-            description: _('The time at which the bar starts'),
+            description: _('The time at which the indicator starts'),
         });
         page.add(startTime);
 
         const resetTime = new Adw.PreferencesGroup({
             title: _('Reset time'),
-            description: _('The time at which the bar resets'),
+            description: _('The time at which the indicator resets'),
         });
         page.add(resetTime);
 
         // Elapsed
         const elapsed = new Adw.SwitchRow({
             title: _('Time Elapsed'),
-            subtitle: _('Whether to show time elapsed instead of remaining on the panel'),
+            subtitle: _('Whether to show time elapsed instead of remaining'),
         });
         appearance.add(elapsed);
 
         // Width
         const width = new Adw.SpinRow({
             title: _("Width"),
-            subtitle: _('Width of the bar (measured in fifth of an em), scales with font'),
+            subtitle: _('Width of the indicator (measured in fifth of an em), scales with font'),
             adjustment: new Gtk.Adjustment({
                 lower: 1,
                 upper: 150,
@@ -60,7 +60,7 @@ export default class ExamplePreferences extends ExtensionPreferences {
         // Height
         const height = new Adw.SpinRow({
             title: _("Height"),
-            subtitle: _('Height of the bar (measured in tenth of an em), scales with font'),
+            subtitle: _('Height of the indicator (measured in tenth of an em), scales with font'),
             adjustment: new Gtk.Adjustment({
                 lower: 2,
                 upper: 50,
@@ -75,6 +75,19 @@ export default class ExamplePreferences extends ExtensionPreferences {
             subtitle: _('Whether the ends of the bar rounded or not'),
         });
         appearance.add(circular);
+
+        // Style
+        const styles = [_("Bar"), _("Pie")];
+        let styleOptionsList = new Gtk.StringList();
+        styles.forEach((it) => {
+            styleOptionsList.append(it);
+        });
+        const styleRow = new Adw.ComboRow({
+            title: _("Indicator style (experimental)"),
+            subtitle: _("How the indicator is displayed"),
+            model: styleOptionsList
+        });
+        appearance.add(styleRow);
 
         // Start time
         const startHour = new Adw.SpinRow({
@@ -147,6 +160,7 @@ export default class ExamplePreferences extends ExtensionPreferences {
         window._settings.bind('width', width, 'value', Gio.SettingsBindFlags.DEFAULT);
         window._settings.bind('height', height, 'value', Gio.SettingsBindFlags.DEFAULT);
         window._settings.bind('circular', circular, 'active', Gio.SettingsBindFlags.DEFAULT);
+        window._settings.bind('style', styleRow, 'selected', Gio.SettingsBindFlags.DEFAULT);
 
         window._settings.bind('start-hour', startHour, 'value', Gio.SettingsBindFlags.DEFAULT);
         window._settings.bind('start-minute', startMinute, 'value', Gio.SettingsBindFlags.DEFAULT);

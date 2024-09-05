@@ -12,6 +12,8 @@ Firstly, have look at [this](https://github.com/users/ArcaEge/projects/1/views/1
 
 ## Screenshots
 
+![Screenshot 9](docs/images/screenshot9.png)
+
 ### Default
 
 ![Screenshot 3](docs/images/screenshot3.png)
@@ -24,7 +26,14 @@ Firstly, have look at [this](https://github.com/users/ArcaEge/projects/1/views/1
 
 ![Screenshot 2](docs/images/screenshot2.png)
 
+### Pie
+
+![Screenshot 7](docs/images/screenshot7.png)
+
+![Screenshot 8](docs/images/screenshot8.png)
+
 ### Also works under GNOME Classic
+
 ![Screenshot 6](docs/images/screenshot6.png)
 
 ### Settings

@@ -1,13 +1,92 @@
 import GLib from 'gi://GLib';
+import GObject from 'gi://GObject';
 import Gio from 'gi://Gio';
 import Clutter from 'gi://Clutter';
 import St from 'gi://St';
+import Cairo from 'gi://cairo';
 
 import { Extension, gettext as _ } from 'resource:///org/gnome/shell/extensions/extension.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 
+const Pie = GObject.registerClass({
+    Properties: {
+        'angle': GObject.ParamSpec.double(
+            'angle', 'angle', 'angle',
+            GObject.ParamFlags.READWRITE,
+            0, 2 * Math.PI, 0),
+    },
+}, class Pie extends St.DrawingArea {
+    _init() {
+        this._angle = 0;
+        super._init({
+            style_class: 'pie',
+            visible: false,
+        });
+
+        // this.set_pivot_point(0.5, 0.5);
+    }
+
+    get angle() {
+        return this._angle;
+    }
+
+    set_angle(angle) {
+        if (this._angle === angle)
+            return;
+
+        this._angle = angle;
+        this.notify('angle');
+        this.queue_repaint();
+    }
+
+    calculate_styles(width, height) {
+        let min = Math.min(width, height)
+        min += 0.5
+        this.style = 'width: ' + min + 'em; ' + 'height: ' + min + 'em;';
+    }
+
+    vfunc_repaint() {
+        let node = this.get_theme_node();
+        let backgroundColor = node.get_color('-pie-background-color');
+        let borderColor = node.get_color('-pie-border-color');
+        let borderColorTransparent = node.get_color('-pie-transparent');
+        let borderWidth = node.get_length('-pie-border-width');
+        let [width, height] = this.get_surface_size();
+        let radius = Math.min(width / 2, height / 2);
+
+        let startAngle = 3 * Math.PI / 2;
+        let endAngle = startAngle + this._angle;
+
+        let cr = this.get_context();
+        cr.setLineCap(Cairo.LineCap.ROUND);
+        cr.setLineJoin(Cairo.LineJoin.ROUND);
+        cr.translate(width / 2, height / 2);
+
+        if (this._angle < 2 * Math.PI)
+            cr.moveTo(0, 0);
+
+        cr.arc(0, 0, radius - borderWidth*2.6, startAngle, endAngle);
+
+        if (this._angle < 2 * Math.PI)
+            cr.lineTo(0, 0);
+
+        cr.closePath();
+
+        cr.setLineWidth(0);
+        cr.setSourceColor(backgroundColor);
+        cr.fillPreserve();
+                
+        cr.arc(0, 0, radius - borderWidth, startAngle, startAngle + 2 * Math.PI);
+                
+        cr.setLineWidth(borderWidth);
+        cr.setSourceColor(borderColor);
+        cr.stroke();
+        
+        cr.$dispose();
+    }
+});
 
 export default class DayProgress extends Extension {
     enable() {
@@ -63,6 +142,9 @@ export default class DayProgress extends Extension {
             styleClass: this.isUsingClassic || this.lightColorScheme ? 'container-classic' : 'container',
         });
 
+        this.pie = new Pie();
+        // this.pie.set_pivot_point(0.5, 0.5);
+
         this.border = new St.Bin({
             reactive: false,
             trackHover: false,
@@ -83,6 +165,7 @@ export default class DayProgress extends Extension {
         });
 
         this.box.add_child(this.container);
+        this.box.add_child(this.pie);
         this.container.add_child(this.border);
         this.border.add_child(this.bar);
         this._indicator.add_child(this.box);
@@ -141,6 +224,13 @@ export default class DayProgress extends Extension {
             this.circular = settings.get_boolean(key);
             this.calculateStyles();
             this.updateBar();
+        });
+
+        // Style
+        this.style = this._settings.get_int('style');
+        this.styleHandle = this._settings.connect('changed::style', (settings, key) => {
+            this.style = settings.get_int(key);
+            this.calculateStyles();
         });
 
         // Start time
@@ -208,11 +298,16 @@ export default class DayProgress extends Extension {
         this.lightColorScheme = Main.sessionMode.colorScheme == 'prefer-light' && this.colorSchemeSettings.get_string('color-scheme') == 'default';
         this.container.styleClass = this.isUsingClassic || this.lightColorScheme ? 'container-classic' : 'container';
         this.bar.styleClass = this.isUsingClassic || this.lightColorScheme ? 'bar-classic' : 'bar';
+        this.pie.style_class = this.isUsingClassic || this.lightColorScheme ? 'pie-classic' : 'pie';
+        this.pie.calculate_styles(this.width, this.height)
     }
 
     calculateStyles() {
         this.container.style = `width: ` + this.width + `em; ` + `height: ` + this.height + `em; ` + 'border-radius: ' + (this.circular ? 1 : 0.3) + 'em;';
         this.border.style = `width: ` + this.width + `em; ` + `height: ` + this.height + `em; ` + 'border-radius: ' + (this.circular ? 1 : 0.3) + 'em;';
+        this.pie.calculate_styles(this.width, this.height)
+        this.container.visible = this.style == 0;
+        this.pie.visible = this.style == 1;
     }
 
     // Update the bar
@@ -245,6 +340,7 @@ export default class DayProgress extends Extension {
         const percentRemainingOfPeriod = 1 - percentElapsedOfPeriod;
         this.bar.style = `width: ` + mapNumber(this.showElapsed ? percentElapsedOfPeriod : percentRemainingOfPeriod, 0, 1, 0.0, this.width - 0.15) +
             `em; ` + `height: ` + this.height + `em; ` + 'border-radius: ' + (this.circular ? 1 : 0.15) + 'em;';    // Needs to be 0.15, half of border curve as it is a smaller corner
+        this.updatePie((this.showElapsed ? percentElapsedOfPeriod : percentRemainingOfPeriod) * (Math.PI * 2.0));
 
         const duration = endTimeFraction > startTimeFraction ? (endTimeFraction - startTimeFraction) : (1 - (startTimeFraction - endTimeFraction));
         const elapsedHours = Math.floor(percentElapsedOfPeriod * duration * 24);
@@ -253,6 +349,10 @@ export default class DayProgress extends Extension {
         const remainingMinutes = Math.floor((percentRemainingOfPeriod * duration * 24 * 60) % 60);
         this.elapsedValue.text = elapsedHours + 'h ' + elapsedMinutes + 'm' + ' | ' + Math.round(percentElapsedOfPeriod * 100) + '%';
         this.remainingValue.text = remainingHours + 'h ' + remainingMinutes + 'm' + ' | ' + Math.round(percentRemainingOfPeriod * 100) + '%';
+    }
+
+    updatePie(angle) {
+        this.pie.set_angle(angle);
     }
 
     // Mostly copied from Noiseclapper@JordanViknar
@@ -291,6 +391,10 @@ export default class DayProgress extends Extension {
         if (this.circularHandle) {
             this._settings.disconnect(this.circularHandle);
             this.circularHandle = null;
+        }
+        if (this.styleHandle) {
+            this._settings.disconnect(this.styleHandle);
+            this.styleHandle = null;
         }
         if (this.startHourHandle) {
             this._settings.disconnect(this.startHourHandle);
@@ -333,6 +437,8 @@ export default class DayProgress extends Extension {
         this.bar = null;
         this.border?.destroy();
         this.border = null;
+        this.pie?.destroy();
+        this.pie = null;
         this.container?.destroy();
         this.container = null;
         this.box?.destroy();
@@ -344,6 +450,7 @@ export default class DayProgress extends Extension {
         this.circular = null;
         this.width = null;
         this.height = null;
+        this.style = null;
         this.startHour = null;
         this.startMinute = null;
         this.resetHour = null;
