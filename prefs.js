@@ -69,15 +69,8 @@ export default class ExamplePreferences extends ExtensionPreferences {
         });
         appearance.add(height);
 
-        // Circular
-        const circular = new Adw.SwitchRow({
-            title: _('Circular bar (experimental)'),
-            subtitle: _('Whether the ends of the bar rounded or not'),
-        });
-        appearance.add(circular);
-
         // Style
-        const styles = [_("Bar"), _("Pie (experimental)")];
+        const styles = [_("Bar"), _("Circular bar (experimental)"), _("Pie"), _("Pie (no border)")];
         let styleOptionsList = new Gtk.StringList();
         styles.forEach((it) => {
             styleOptionsList.append(it);
@@ -159,7 +152,6 @@ export default class ExamplePreferences extends ExtensionPreferences {
         window._settings.bind('show-elapsed', elapsed, 'active', Gio.SettingsBindFlags.DEFAULT);
         window._settings.bind('width', width, 'value', Gio.SettingsBindFlags.DEFAULT);
         window._settings.bind('height', height, 'value', Gio.SettingsBindFlags.DEFAULT);
-        window._settings.bind('circular', circular, 'active', Gio.SettingsBindFlags.DEFAULT);
         window._settings.bind('style', styleRow, 'selected', Gio.SettingsBindFlags.DEFAULT);
 
         window._settings.bind('start-hour', startHour, 'value', Gio.SettingsBindFlags.DEFAULT);

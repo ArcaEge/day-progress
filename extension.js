@@ -20,12 +20,11 @@ const Pie = GObject.registerClass({
 }, class Pie extends St.DrawingArea {
     _init() {
         this._angle = 0;
+        this._outerBorder = true;
         super._init({
             style_class: 'pie',
             visible: false,
         });
-
-        // this.set_pivot_point(0.5, 0.5);
     }
 
     get angle() {
@@ -41,17 +40,18 @@ const Pie = GObject.registerClass({
         this.queue_repaint();
     }
 
-    calculate_styles(width, height) {
-        let min = Math.min(width, height)
-        min += 0.5
+    calculate_styles(width, height, outerBorder) {
+        let min = Math.min(width, height);
+        min += 0.5;
         this.style = 'width: ' + min + 'em; ' + 'height: ' + min + 'em;';
+        this._outerBorder = outerBorder;
     }
 
     vfunc_repaint() {
         let node = this.get_theme_node();
-        let backgroundColor = node.get_color('-pie-background-color');
+        let fillColor = node.get_color('-pie-color');
+        let bgColor = node.get_color('-pie-background-color');
         let borderColor = node.get_color('-pie-border-color');
-        let borderColorTransparent = node.get_color('-pie-transparent');
         let borderWidth = node.get_length('-pie-border-width');
         let [width, height] = this.get_surface_size();
         let radius = Math.min(width / 2, height / 2);
@@ -67,7 +67,7 @@ const Pie = GObject.registerClass({
         if (this._angle < 2 * Math.PI)
             cr.moveTo(0, 0);
 
-        cr.arc(0, 0, radius - borderWidth*2.6, startAngle, endAngle);
+        cr.arc(0, 0, radius - borderWidth * (this._outerBorder ? 2.6 : 1), startAngle, endAngle);
 
         if (this._angle < 2 * Math.PI)
             cr.lineTo(0, 0);
@@ -75,14 +75,35 @@ const Pie = GObject.registerClass({
         cr.closePath();
 
         cr.setLineWidth(0);
-        cr.setSourceColor(backgroundColor);
-        cr.fillPreserve();
-                
-        cr.arc(0, 0, radius - borderWidth, startAngle, startAngle + 2 * Math.PI);
-                
-        cr.setLineWidth(borderWidth);
-        cr.setSourceColor(borderColor);
-        cr.stroke();
+        cr.setSourceColor(fillColor);
+        cr.fill();
+
+        if (!this._outerBorder) {
+            cr.moveTo(0, 0);
+
+            if (this._angle >= 2 * Math.PI || this._angle >= 0) {
+                cr.arc(0, 0, radius - borderWidth, startAngle, startAngle - 0.000000000001);
+            } else {
+                cr.arc(0, 0, radius - borderWidth, endAngle, startAngle);
+            }
+
+            cr.lineTo(0, 0);
+
+            cr.closePath();
+
+            cr.setLineWidth(0);
+            cr.setSourceColor(bgColor);
+            cr.fill();
+        }
+        
+        // Draw outer border
+        if (this._outerBorder) {
+            cr.arc(0, 0, radius - borderWidth, startAngle, startAngle + 2 * Math.PI);
+                    
+            cr.setLineWidth(borderWidth);
+            cr.setSourceColor(borderColor);
+            cr.stroke();
+        }
         
         cr.$dispose();
     }
@@ -118,16 +139,13 @@ export default class DayProgress extends Extension {
         // Height
         this.height = this._settings.get_int('height') / 10;
 
-        // Circular
-        this.circular = this._settings.get_boolean('circular');
-
         // Create UI elements
         this.box = new St.BoxLayout({
             // style: `border-width: 1px; border-color: rgba(220, 220, 220, 1); height: 20px; border-radius: 10px; background-color: rgb(255, 255, 255); width: 40px;`, // border-width: 1px; border-color: rgba(220, 220, 220, 1); height: 10px; border-radius: 10px; background-color: rgba(255, 255, 255, 0.2)
             xAlign: Clutter.ActorAlign.CENTER,
-            xExpand: true,
+            xExpand: false,
             yAlign: Clutter.ActorAlign.CENTER,
-            yExpand: true,
+            yExpand: false,
         });
 
         this.container = new St.Bin({
@@ -143,7 +161,6 @@ export default class DayProgress extends Extension {
         });
 
         this.pie = new Pie();
-        // this.pie.set_pivot_point(0.5, 0.5);
 
         this.border = new St.Bin({
             reactive: false,
@@ -219,17 +236,12 @@ export default class DayProgress extends Extension {
             this.updateBar();
         });
 
-        // Circular
-        this.circularHandle = this._settings.connect('changed::circular', (settings, key) => {
-            this.circular = settings.get_boolean(key);
-            this.calculateStyles();
-            this.updateBar();
-        });
-
         // Style
         this.style = this._settings.get_int('style');
+        this.circular = this.style == 1;
         this.styleHandle = this._settings.connect('changed::style', (settings, key) => {
             this.style = settings.get_int(key);
+            this.circular = this.style == 1;
             this.calculateStyles();
         });
 
@@ -299,15 +311,16 @@ export default class DayProgress extends Extension {
         this.container.styleClass = this.isUsingClassic || this.lightColorScheme ? 'container-classic' : 'container';
         this.bar.styleClass = this.isUsingClassic || this.lightColorScheme ? 'bar-classic' : 'bar';
         this.pie.style_class = this.isUsingClassic || this.lightColorScheme ? 'pie-classic' : 'pie';
-        this.pie.calculate_styles(this.width, this.height)
+        this.pie.calculate_styles(this.width, this.height, this.style == 2);
     }
 
     calculateStyles() {
         this.container.style = `width: ` + this.width + `em; ` + `height: ` + this.height + `em; ` + 'border-radius: ' + (this.circular ? 1 : 0.3) + 'em;';
         this.border.style = `width: ` + this.width + `em; ` + `height: ` + this.height + `em; ` + 'border-radius: ' + (this.circular ? 1 : 0.3) + 'em;';
-        this.pie.calculate_styles(this.width, this.height)
-        this.container.visible = this.style == 0;
-        this.pie.visible = this.style == 1;
+        this.pie.calculate_styles(this.width, this.height, this.style == 2);
+        this.container.visible = (this.style == 0 || this.style == 1);
+        this.pie.visible = (this.style == 2 || this.style == 3);
+        this.updateBar();
     }
 
     // Update the bar
@@ -349,6 +362,8 @@ export default class DayProgress extends Extension {
         const remainingMinutes = Math.floor((percentRemainingOfPeriod * duration * 24 * 60) % 60);
         this.elapsedValue.text = elapsedHours + 'h ' + elapsedMinutes + 'm' + ' | ' + Math.round(percentElapsedOfPeriod * 100) + '%';
         this.remainingValue.text = remainingHours + 'h ' + remainingMinutes + 'm' + ' | ' + Math.round(percentRemainingOfPeriod * 100) + '%';
+
+        this.applyPosition();
     }
 
     updatePie(angle) {
@@ -387,10 +402,6 @@ export default class DayProgress extends Extension {
         if (this.heightHandle) {
             this._settings.disconnect(this.heightHandle);
             this.heightHandle = null;
-        }
-        if (this.circularHandle) {
-            this._settings.disconnect(this.circularHandle);
-            this.circularHandle = null;
         }
         if (this.styleHandle) {
             this._settings.disconnect(this.styleHandle);
