@@ -14,13 +14,13 @@ Firstly, have look at [this](https://github.com/ArcaEge/day-progress/issues) pag
 
 ![Screenshot 9](docs/images/screenshot9.png)
 
-### Default
+### Default (bar)
 
 ![Screenshot 3](docs/images/screenshot3.png)
 
 ![Screenshot 1](docs/images/screenshot1.png)
 
-### Rounded
+### Rounded bar
 
 ![Screenshot 4](docs/images/screenshot4.png)
 
@@ -31,6 +31,12 @@ Firstly, have look at [this](https://github.com/ArcaEge/day-progress/issues) pag
 ![Screenshot 8](docs/images/screenshot8.png)
 
 ![Screenshot 7](docs/images/screenshot7.png)
+
+### Pie (no border)
+
+![Screenshot 11](docs/images/screenshot11.png)
+
+![Screenshot 10](docs/images/screenshot10.png)
 
 ### Also works under GNOME Classic
 
