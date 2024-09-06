@@ -77,13 +77,13 @@ export default class ExamplePreferences extends ExtensionPreferences {
         appearance.add(circular);
 
         // Style
-        const styles = [_("Bar"), _("Pie")];
+        const styles = [_("Bar"), _("Pie (experimental)")];
         let styleOptionsList = new Gtk.StringList();
         styles.forEach((it) => {
             styleOptionsList.append(it);
         });
         const styleRow = new Adw.ComboRow({
-            title: _("Indicator style (experimental)"),
+            title: _("Indicator style"),
             subtitle: _("How the indicator is displayed"),
             model: styleOptionsList
         });

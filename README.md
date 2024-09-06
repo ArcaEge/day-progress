@@ -8,7 +8,7 @@ A simple GNOME shell extension that displays a (somewhat) customisable progress 
 
 ## Reporting bugs/feature requests
 
-Firstly, have look at [this](https://github.com/users/ArcaEge/projects/1/views/1) page to see if we're already working on it. If not, please submit an issue [here](https://github.com/ArcaEge/day-progress/issues/new), we'll have a look at it soon™️.
+Firstly, have look at [this](https://github.com/ArcaEge/day-progress/issues) page to see if it's already been reported. If not, please submit an issue [here](https://github.com/ArcaEge/day-progress/issues/new), we'll have a look at it soon™️.
 
 ## Screenshots
 
@@ -28,9 +28,9 @@ Firstly, have look at [this](https://github.com/users/ArcaEge/projects/1/views/1
 
 ### Pie
 
-![Screenshot 7](docs/images/screenshot7.png)
-
 ![Screenshot 8](docs/images/screenshot8.png)
+
+![Screenshot 7](docs/images/screenshot7.png)
 
 ### Also works under GNOME Classic
 
