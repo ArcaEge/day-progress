@@ -122,7 +122,7 @@ export default class DayProgress extends Extension {
             schema_id: 'org.gnome.desktop.interface',
         });
 
-        this.lightColorScheme = Main.sessionMode.colorScheme == 'prefer-light' && this.colorSchemeSettings.get_string('color-scheme') == 'default';
+        this.lightColorScheme = this.colorSchemeSettings.get_string('color-scheme') == 'prefer-light';
 
         // Create a panel button
         this._indicator = new PanelMenu.Button(0.5, this.metadata.name, false);
@@ -307,7 +307,7 @@ export default class DayProgress extends Extension {
 
     // Support for light panel through extensions such as Light Style
     colorSchemeChanged() {
-        this.lightColorScheme = Main.sessionMode.colorScheme == 'prefer-light' && this.colorSchemeSettings.get_string('color-scheme') == 'default';
+        this.lightColorScheme = this.colorSchemeSettings.get_string('color-scheme') == 'prefer-light';
         this.container.styleClass = this.isUsingClassic || this.lightColorScheme ? 'container-classic' : 'container';
         this.bar.styleClass = this.isUsingClassic || this.lightColorScheme ? 'bar-classic' : 'bar';
         this.pie.style_class = this.isUsingClassic || this.lightColorScheme ? 'pie-classic' : 'pie';
