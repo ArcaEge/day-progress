@@ -12,7 +12,7 @@ mkdir /tmp/gnome-extension/$extensionName
 
 # Copy all files
 echo "Copying files"
-cp -r ~/.local/share/gnome-shell/extensions/$extensionName/* /tmp/gnome-extension/$extensionName/
+cp -r ./* /tmp/gnome-extension/$extensionName/
 
 # Remove unnecessary files/folders
 echo "Removing unnecessary files"
