@@ -5,7 +5,8 @@
   "shell-version": [
     "46",
     "47",
-    "48"
+    "48",
+    "49"
   ],
   "settings-schema": "org.gnome.shell.extensions.day-progress",
   "url": "https://github.com/ArcaEge/day-progress"
