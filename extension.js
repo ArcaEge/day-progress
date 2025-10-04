@@ -133,22 +133,34 @@ export default class DayProgress extends Extension {
         // Get show elapsed key
         this.showElapsed = this._settings.get_boolean('show-elapsed');
 
+        // Get show year progress key
+        this.showYearProgress = this._settings.get_boolean('show-year-progress');
+
+        // Get show life progress key
+        this.showLifeProgress = this._settings.get_boolean('show-life-progress');
+
         // Width
         this.width = this._settings.get_int('width') / 5;
 
         // Height
         this.height = this._settings.get_int('height') / 10;
 
-        // Create UI elements
-        this.box = new St.BoxLayout({
-            // style: `border-width: 1px; border-color: rgba(220, 220, 220, 1); height: 20px; border-radius: 10px; background-color: rgb(255, 255, 255); width: 40px;`, // border-width: 1px; border-color: rgba(220, 220, 220, 1); height: 10px; border-radius: 10px; background-color: rgba(255, 255, 255, 0.2)
+        // Create main vertical box to stack all progress bars
+        this.mainBox = new St.BoxLayout({
+            vertical: true,
+            xAlign: Clutter.ActorAlign.CENTER,
+            yAlign: Clutter.ActorAlign.CENTER,
+        });
+
+        // Create UI elements for DAY progress
+        this.dayBox = new St.BoxLayout({
             xAlign: Clutter.ActorAlign.CENTER,
             xExpand: false,
             yAlign: Clutter.ActorAlign.CENTER,
             yExpand: false,
         });
 
-        this.container = new St.Bin({
+        this.dayContainer = new St.Bin({
             reactive: false,
             trackHover: false,
             canFocus: false,
@@ -156,13 +168,13 @@ export default class DayProgress extends Extension {
             yExpand: true,
             xAlign: Clutter.ActorAlign.CENTER,
             yAlign: Clutter.ActorAlign.CENTER,
-            style: ``, // width: 2.5em; height: 0.85em; background-color: rgba(255, 255, 255, 0.0); border-radius: 1em; border-width: 0.1em; overflow: hidden;
+            style: ``,
             styleClass: this.isUsingClassic || this.lightColorScheme ? 'container-classic' : 'container',
         });
 
-        this.pie = new Pie();
+        this.dayPie = new Pie();
 
-        this.border = new St.Bin({
+        this.dayBorder = new St.Bin({
             reactive: false,
             trackHover: false,
             canFocus: false,
@@ -173,7 +185,7 @@ export default class DayProgress extends Extension {
             styleClass: 'border',
         });
 
-        this.bar = new St.Bin({
+        this.dayBar = new St.Bin({
             styleClass: this.isUsingClassic || this.lightColorScheme ? 'bar-classic' : 'bar',
             yExpand: true,
             yAlign: Clutter.ActorAlign.CENTER,
@@ -181,37 +193,189 @@ export default class DayProgress extends Extension {
             xExpand: true,
         });
 
-        this.box.add_child(this.container);
-        this.box.add_child(this.pie);
-        this.container.add_child(this.border);
-        this.border.add_child(this.bar);
-        this._indicator.add_child(this.box);
+        this.dayBox.add_child(this.dayContainer);
+        this.dayBox.add_child(this.dayPie);
+        this.dayContainer.add_child(this.dayBorder);
+        this.dayBorder.add_child(this.dayBar);
 
-        this.menuElapsedContainer = new PopupMenu.PopupBaseMenuItem({ reactive: false });
-        this.elapsedLabel = new St.Label({
-            text: 'Elapsed',
+        // Create UI elements for YEAR progress
+        this.yearBox = new St.BoxLayout({
+            xAlign: Clutter.ActorAlign.CENTER,
+            xExpand: false,
+            yAlign: Clutter.ActorAlign.CENTER,
+            yExpand: false,
+        });
+
+        this.yearContainer = new St.Bin({
+            reactive: false,
+            trackHover: false,
+            canFocus: false,
+            xExpand: true,
+            yExpand: true,
+            xAlign: Clutter.ActorAlign.CENTER,
+            yAlign: Clutter.ActorAlign.CENTER,
+            style: ``,
+            styleClass: this.isUsingClassic || this.lightColorScheme ? 'container-classic' : 'container',
+        });
+
+        this.yearPie = new Pie();
+
+        this.yearBorder = new St.Bin({
+            reactive: false,
+            trackHover: false,
+            canFocus: false,
+            xExpand: true,
+            yExpand: true,
+            xAlign: Clutter.ActorAlign.CENTER,
+            yAlign: Clutter.ActorAlign.CENTER,
+            styleClass: 'border',
+        });
+
+        this.yearBar = new St.Bin({
+            styleClass: this.isUsingClassic || this.lightColorScheme ? 'bar-classic' : 'bar',
+            yExpand: true,
+            yAlign: Clutter.ActorAlign.CENTER,
+            xAlign: Clutter.ActorAlign.START,
+            xExpand: true,
+        });
+
+        this.yearBox.add_child(this.yearContainer);
+        this.yearBox.add_child(this.yearPie);
+        this.yearContainer.add_child(this.yearBorder);
+        this.yearBorder.add_child(this.yearBar);
+
+        // Create UI elements for LIFE progress
+        this.lifeBox = new St.BoxLayout({
+            xAlign: Clutter.ActorAlign.CENTER,
+            xExpand: false,
+            yAlign: Clutter.ActorAlign.CENTER,
+            yExpand: false,
+        });
+
+        this.lifeContainer = new St.Bin({
+            reactive: false,
+            trackHover: false,
+            canFocus: false,
+            xExpand: true,
+            yExpand: true,
+            xAlign: Clutter.ActorAlign.CENTER,
+            yAlign: Clutter.ActorAlign.CENTER,
+            style: ``,
+            styleClass: this.isUsingClassic || this.lightColorScheme ? 'container-classic' : 'container',
+        });
+
+        this.lifePie = new Pie();
+
+        this.lifeBorder = new St.Bin({
+            reactive: false,
+            trackHover: false,
+            canFocus: false,
+            xExpand: true,
+            yExpand: true,
+            xAlign: Clutter.ActorAlign.CENTER,
+            yAlign: Clutter.ActorAlign.CENTER,
+            styleClass: 'border',
+        });
+
+        this.lifeBar = new St.Bin({
+            styleClass: this.isUsingClassic || this.lightColorScheme ? 'bar-classic' : 'bar',
+            yExpand: true,
+            yAlign: Clutter.ActorAlign.CENTER,
+            xAlign: Clutter.ActorAlign.START,
+            xExpand: true,
+        });
+
+        this.lifeBox.add_child(this.lifeContainer);
+        this.lifeBox.add_child(this.lifePie);
+        this.lifeContainer.add_child(this.lifeBorder);
+        this.lifeBorder.add_child(this.lifeBar);
+
+        // Add all boxes to main vertical box
+        this.mainBox.add_child(this.dayBox);
+        this.mainBox.add_child(this.yearBox);
+        this.mainBox.add_child(this.lifeBox);
+        this._indicator.add_child(this.mainBox);
+
+        // Menu items for DAY
+        this.menuDayElapsedContainer = new PopupMenu.PopupBaseMenuItem({ reactive: false });
+        this.dayElapsedLabel = new St.Label({
+            text: 'Day Elapsed',
             xAlign: Clutter.ActorAlign.START,
             xExpand: true,
             styleClass: 'label',
         });
-        this.elapsedValue = new St.Label({
+        this.dayElapsedValue = new St.Label({
             text: '',
         });
-        this.menuElapsedContainer.add_child(this.elapsedLabel);
-        this.menuElapsedContainer.add_child(this.elapsedValue);
+        this.menuDayElapsedContainer.add_child(this.dayElapsedLabel);
+        this.menuDayElapsedContainer.add_child(this.dayElapsedValue);
 
-        this.menuRemainingContainer = new PopupMenu.PopupBaseMenuItem({ reactive: false });
-        this.remainingLabel = new St.Label({
-            text: 'Remaining',
+        this.menuDayRemainingContainer = new PopupMenu.PopupBaseMenuItem({ reactive: false });
+        this.dayRemainingLabel = new St.Label({
+            text: 'Day Remaining',
             xAlign: Clutter.ActorAlign.START,
             xExpand: true,
             styleClass: 'label',
         });
-        this.remainingValue = new St.Label({
+        this.dayRemainingValue = new St.Label({
             text: '',
         });
-        this.menuRemainingContainer.add_child(this.remainingLabel);
-        this.menuRemainingContainer.add_child(this.remainingValue);
+        this.menuDayRemainingContainer.add_child(this.dayRemainingLabel);
+        this.menuDayRemainingContainer.add_child(this.dayRemainingValue);
+
+        // Menu items for YEAR
+        this.menuYearElapsedContainer = new PopupMenu.PopupBaseMenuItem({ reactive: false });
+        this.yearElapsedLabel = new St.Label({
+            text: 'Year Elapsed',
+            xAlign: Clutter.ActorAlign.START,
+            xExpand: true,
+            styleClass: 'label',
+        });
+        this.yearElapsedValue = new St.Label({
+            text: '',
+        });
+        this.menuYearElapsedContainer.add_child(this.yearElapsedLabel);
+        this.menuYearElapsedContainer.add_child(this.yearElapsedValue);
+
+        this.menuYearRemainingContainer = new PopupMenu.PopupBaseMenuItem({ reactive: false });
+        this.yearRemainingLabel = new St.Label({
+            text: 'Year Remaining',
+            xAlign: Clutter.ActorAlign.START,
+            xExpand: true,
+            styleClass: 'label',
+        });
+        this.yearRemainingValue = new St.Label({
+            text: '',
+        });
+        this.menuYearRemainingContainer.add_child(this.yearRemainingLabel);
+        this.menuYearRemainingContainer.add_child(this.yearRemainingValue);
+
+        // Menu items for LIFE
+        this.menuLifeElapsedContainer = new PopupMenu.PopupBaseMenuItem({ reactive: false });
+        this.lifeElapsedLabel = new St.Label({
+            text: 'Life Elapsed',
+            xAlign: Clutter.ActorAlign.START,
+            xExpand: true,
+            styleClass: 'label',
+        });
+        this.lifeElapsedValue = new St.Label({
+            text: '',
+        });
+        this.menuLifeElapsedContainer.add_child(this.lifeElapsedLabel);
+        this.menuLifeElapsedContainer.add_child(this.lifeElapsedValue);
+
+        this.menuLifeRemainingContainer = new PopupMenu.PopupBaseMenuItem({ reactive: false });
+        this.lifeRemainingLabel = new St.Label({
+            text: 'Life Remaining',
+            xAlign: Clutter.ActorAlign.START,
+            xExpand: true,
+            styleClass: 'label',
+        });
+        this.lifeRemainingValue = new St.Label({
+            text: '',
+        });
+        this.menuLifeRemainingContainer.add_child(this.lifeRemainingLabel);
+        this.menuLifeRemainingContainer.add_child(this.lifeRemainingValue);
 
         // Add the indicator to the panel
         Main.panel.addToStatusArea(this.uuid, this._indicator);
@@ -219,21 +383,35 @@ export default class DayProgress extends Extension {
         // Show elapsed
         this.showElapsedHandle = this._settings.connect('changed::show-elapsed', (settings, key) => {
             this.showElapsed = settings.get_boolean(key);
-            this.updateBar();
+            this.updateBars();
+        });
+
+        // Show year progress
+        this.showYearProgressHandle = this._settings.connect('changed::show-year-progress', (settings, key) => {
+            this.showYearProgress = settings.get_boolean(key);
+            this.updateVisibility();
+            this.updateBars();
+        });
+
+        // Show life progress
+        this.showLifeProgressHandle = this._settings.connect('changed::show-life-progress', (settings, key) => {
+            this.showLifeProgress = settings.get_boolean(key);
+            this.updateVisibility();
+            this.updateBars();
         });
 
         // Width
         this.widthHandle = this._settings.connect('changed::width', (settings, key) => {
             this.width = settings.get_int(key) / 5;
             this.calculateStyles();
-            this.updateBar();
+            this.updateBars();
         });
 
         // Height
         this.heightHandle = this._settings.connect('changed::height', (settings, key) => {
             this.height = settings.get_int(key) / 10;
             this.calculateStyles();
-            this.updateBar();
+            this.updateBars();
         });
 
         // Style
@@ -249,26 +427,39 @@ export default class DayProgress extends Extension {
         this.startHour = this._settings.get_int('start-hour');
         this.startHourHandle = this._settings.connect('changed::start-hour', (settings, key) => {
             this.startHour = settings.get_int(key);
-            this.updateBar();
+            this.updateBars();
         });
 
         this.startMinute = this._settings.get_int('start-minute');
         this.startMinuteHandle = this._settings.connect('changed::start-minute', (settings, key) => {
             this.startMinute = settings.get_int(key);
-            this.updateBar();
+            this.updateBars();
         });
 
         // Reset times
         this.resetHour = this._settings.get_int('reset-hour');
         this.resetHourHandle = this._settings.connect('changed::reset-hour', (settings, key) => {
             this.resetHour = settings.get_int(key);
-            this.updateBar();
+            this.updateBars();
         });
 
         this.resetMinute = this._settings.get_int('reset-minute');
         this.resetMinuteHandle = this._settings.connect('changed::reset-minute', (settings, key) => {
             this.resetMinute = settings.get_int(key);
-            this.updateBar();
+            this.updateBars();
+        });
+
+        // Life start and end years
+        this.lifeStartYear = this._settings.get_int('life-start-year');
+        this.lifeStartYearHandle = this._settings.connect('changed::life-start-year', (settings, key) => {
+            this.lifeStartYear = settings.get_int(key);
+            this.updateBars();
+        });
+
+        this.lifeEndYear = this._settings.get_int('life-end-year');
+        this.lifeEndYearHandle = this._settings.connect('changed::life-end-year', (settings, key) => {
+            this.lifeEndYear = settings.get_int(key);
+            this.updateBars();
         });
 
         // Panel position
@@ -286,88 +477,196 @@ export default class DayProgress extends Extension {
 
         this.applyPosition();
         this.calculateStyles();
+        this.updateVisibility();
 
-        // Update bar now to immediately populate it
-        this.updateBar();
+        // Update bars now to immediately populate them
+        this.updateBars();
 
         // Light styles
         this.colorSchemeChanged();
 
         this.timerID = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 10, () => {
-            this.updateBar();
+            this.updateBars();
             return GLib.SOURCE_CONTINUE;
         });
 
-        this._indicator.menu.addMenuItem(this.menuElapsedContainer);
-        this._indicator.menu.addMenuItem(this.menuRemainingContainer);
+        this._indicator.menu.addMenuItem(this.menuDayElapsedContainer);
+        this._indicator.menu.addMenuItem(this.menuDayRemainingContainer);
+        this._indicator.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+        this._indicator.menu.addMenuItem(this.menuYearElapsedContainer);
+        this._indicator.menu.addMenuItem(this.menuYearRemainingContainer);
+        this._indicator.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+        this._indicator.menu.addMenuItem(this.menuLifeElapsedContainer);
+        this._indicator.menu.addMenuItem(this.menuLifeRemainingContainer);
         // Add a menu item to open the preferences window
+        this._indicator.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         this._indicator.menu.addAction(_('Preferences'),
             () => this.openPreferences());
+    }
+
+    updateVisibility() {
+        this.yearBox.visible = this.showYearProgress;
+        this.menuYearElapsedContainer.visible = this.showYearProgress;
+        this.menuYearRemainingContainer.visible = this.showYearProgress;
+
+        this.lifeBox.visible = this.showLifeProgress;
+        this.menuLifeElapsedContainer.visible = this.showLifeProgress;
+        this.menuLifeRemainingContainer.visible = this.showLifeProgress;
     }
 
     // Support for light panel through extensions such as Light Style
     colorSchemeChanged() {
         this.lightColorScheme = this.colorSchemeSettings.get_string('color-scheme') == 'prefer-light';
-        this.container.styleClass = this.isUsingClassic || this.lightColorScheme ? 'container-classic' : 'container';
-        this.bar.styleClass = this.isUsingClassic || this.lightColorScheme ? 'bar-classic' : 'bar';
-        this.pie.style_class = this.isUsingClassic || this.lightColorScheme ? 'pie-classic' : 'pie';
-        this.pie.calculate_styles(this.width, this.height, this.style == 2);
+        
+        // Day elements
+        this.dayContainer.styleClass = this.isUsingClassic || this.lightColorScheme ? 'container-classic' : 'container';
+        this.dayBar.styleClass = this.isUsingClassic || this.lightColorScheme ? 'bar-classic' : 'bar';
+        this.dayPie.style_class = this.isUsingClassic || this.lightColorScheme ? 'pie-classic' : 'pie';
+        this.dayPie.calculate_styles(this.width, this.height, this.style == 2);
+        
+        // Year elements
+        this.yearContainer.styleClass = this.isUsingClassic || this.lightColorScheme ? 'container-classic' : 'container';
+        this.yearBar.styleClass = this.isUsingClassic || this.lightColorScheme ? 'bar-classic' : 'bar';
+        this.yearPie.style_class = this.isUsingClassic || this.lightColorScheme ? 'pie-classic' : 'pie';
+        this.yearPie.calculate_styles(this.width, this.height, this.style == 2);
+
+        // Life elements
+        this.lifeContainer.styleClass = this.isUsingClassic || this.lightColorScheme ? 'container-classic' : 'container';
+        this.lifeBar.styleClass = this.isUsingClassic || this.lightColorScheme ? 'bar-classic' : 'bar';
+        this.lifePie.style_class = this.isUsingClassic || this.lightColorScheme ? 'pie-classic' : 'pie';
+        this.lifePie.calculate_styles(this.width, this.height, this.style == 2);
     }
 
     calculateStyles() {
-        this.container.style = `width: ` + this.width + `em; ` + `height: ` + this.height + `em; ` + 'border-radius: ' + (this.circular ? 1 : 0.3) + 'em;';
-        this.border.style = `width: ` + this.width + `em; ` + `height: ` + this.height + `em; ` + 'border-radius: ' + (this.circular ? 1 : 0.3) + 'em;';
-        this.pie.calculate_styles(this.width, this.height, this.style == 2);
-        this.container.visible = (this.style == 0 || this.style == 1);
-        this.pie.visible = (this.style == 2 || this.style == 3);
-        this.updateBar();
+        // Day styles
+        this.dayContainer.style = `width: ` + this.width + `em; ` + `height: ` + this.height + `em; ` + 'border-radius: ' + (this.circular ? 1 : 0.3) + 'em;';
+        this.dayBorder.style = `width: ` + this.width + `em; ` + `height: ` + this.height + `em; ` + 'border-radius: ' + (this.circular ? 1 : 0.3) + 'em;';
+        this.dayPie.calculate_styles(this.width, this.height, this.style == 2);
+        this.dayContainer.visible = (this.style == 0 || this.style == 1);
+        this.dayPie.visible = (this.style == 2 || this.style == 3);
+        
+        // Year styles
+        this.yearContainer.style = `width: ` + this.width + `em; ` + `height: ` + this.height + `em; ` + 'border-radius: ' + (this.circular ? 1 : 0.3) + 'em;';
+        this.yearBorder.style = `width: ` + this.width + `em; ` + `height: ` + this.height + `em; ` + 'border-radius: ' + (this.circular ? 1 : 0.3) + 'em;';
+        this.yearPie.calculate_styles(this.width, this.height, this.style == 2);
+        this.yearContainer.visible = (this.style == 0 || this.style == 1);
+        this.yearPie.visible = (this.style == 2 || this.style == 3);
+
+        // Life styles
+        this.lifeContainer.style = `width: ` + this.width + `em; ` + `height: ` + this.height + `em; ` + 'border-radius: ' + (this.circular ? 1 : 0.3) + 'em;';
+        this.lifeBorder.style = `width: ` + this.width + `em; ` + `height: ` + this.height + `em; ` + 'border-radius: ' + (this.circular ? 1 : 0.3) + 'em;';
+        this.lifePie.calculate_styles(this.width, this.height, this.style == 2);
+        this.lifeContainer.visible = (this.style == 0 || this.style == 1);
+        this.lifePie.visible = (this.style == 2 || this.style == 3);
+        
+        this.updateBars();
     }
 
-    // Update the bar
-    updateBar() {
-        // TODO: convert this to a listener
+    // Update all bars
+    updateBars() {
         this.colorSchemeChanged();
 
         const localDateTime = GLib.DateTime.new_now_local();
-        // Start time as a fraction of the day
+        
+        // === DAY PROGRESS ===
         const startTimeFraction = this.startHour / 24 + this.startMinute / (60 * 24);
-        // End time as a fraction of the day
         const endTimeFraction = this.resetHour / 24 + this.resetMinute / (60 * 24);
 
         const percentElapsedOfPeriod = (() => {
-            // Current time as a fraction of the day
             const currentTimeFraction = (localDateTime.get_hour() + localDateTime.get_minute() / 60 + localDateTime.get_second() / 3600) / 24;
 
-            // No midnight wrap around
             if (endTimeFraction > startTimeFraction) {
                 return mapNumber(clamp(currentTimeFraction, startTimeFraction, endTimeFraction), startTimeFraction, endTimeFraction, 0, 1);
             }
 
-            // There is midnight wrap around
             if (currentTimeFraction >= endTimeFraction && currentTimeFraction < startTimeFraction) return 1;
             const durationFraction = (1 - (startTimeFraction - endTimeFraction));
             const offset = 1 - startTimeFraction;
             const offsettedTimeFraction = (currentTimeFraction + 1 + offset) % 1;
             return mapNumber(clamp(offsettedTimeFraction, 0, durationFraction), 0, durationFraction, 0, 1);
         })();
+        
         const percentRemainingOfPeriod = 1 - percentElapsedOfPeriod;
-        this.bar.style = `width: ` + mapNumber(this.showElapsed ? percentElapsedOfPeriod : percentRemainingOfPeriod, 0, 1, 0.0, this.width - 0.15) +
-            `em; ` + `height: ` + this.height + `em; ` + 'border-radius: ' + (this.circular ? 1 : 0.15) + 'em;';    // Needs to be 0.15, half of border curve as it is a smaller corner
-        this.updatePie((this.showElapsed ? percentElapsedOfPeriod : percentRemainingOfPeriod) * (Math.PI * 2.0));
+        
+        this.dayBar.style = `width: ` + mapNumber(this.showElapsed ? percentElapsedOfPeriod : percentRemainingOfPeriod, 0, 1, 0.0, this.width - 0.15) +
+            `em; ` + `height: ` + this.height + `em; ` + 'border-radius: ' + (this.circular ? 1 : 0.15) + 'em;';
+        this.updateDayPie((this.showElapsed ? percentElapsedOfPeriod : percentRemainingOfPeriod) * (Math.PI * 2.0));
 
         const duration = endTimeFraction > startTimeFraction ? (endTimeFraction - startTimeFraction) : (1 - (startTimeFraction - endTimeFraction));
         const elapsedHours = Math.floor(percentElapsedOfPeriod * duration * 24);
         const elapsedMinutes = Math.floor((percentElapsedOfPeriod * duration * 24 * 60) % 60);
         const remainingHours = Math.floor(percentRemainingOfPeriod * duration * 24);
         const remainingMinutes = Math.floor((percentRemainingOfPeriod * duration * 24 * 60) % 60);
-        this.elapsedValue.text = elapsedHours + 'h ' + elapsedMinutes + 'm' + ' | ' + Math.round(percentElapsedOfPeriod * 100) + '%';
-        this.remainingValue.text = remainingHours + 'h ' + remainingMinutes + 'm' + ' | ' + Math.round(percentRemainingOfPeriod * 100) + '%';
+        this.dayElapsedValue.text = elapsedHours + 'h ' + elapsedMinutes + 'm' + ' | ' + Math.round(percentElapsedOfPeriod * 100) + '%';
+        this.dayRemainingValue.text = remainingHours + 'h ' + remainingMinutes + 'm' + ' | ' + Math.round(percentRemainingOfPeriod * 100) + '%';
+
+        // === YEAR PROGRESS ===
+        const dayOfYear = localDateTime.get_day_of_year();
+        const year = localDateTime.get_year();
+        const isLeapYear = new Date(year, 1, 29).getDate() === 29;
+        const totalDays = isLeapYear ? 366 : 365;
+
+        const percentElapsedOfYear = dayOfYear / totalDays;
+        const percentRemainingOfYear = 1 - percentElapsedOfYear;
+        const daysRemaining = totalDays - dayOfYear;
+
+        this.yearBar.style = `width: ` + mapNumber(
+            this.showElapsed ? percentElapsedOfYear : percentRemainingOfYear,
+            0, 1, 0.0, this.width - 0.15
+        ) + `em; height: ` + this.height + `em; border-radius: ` + 
+        (this.circular ? 1 : 0.15) + 'em;';
+
+        this.updateYearPie((this.showElapsed ? percentElapsedOfYear : percentRemainingOfYear) * (Math.PI * 2.0));
+
+        const elapsedDays = dayOfYear;
+        this.yearElapsedValue.text = `${elapsedDays} days | ${Math.round(percentElapsedOfYear * 100)}%`;
+        this.yearRemainingValue.text = `${daysRemaining} days | ${Math.round(percentRemainingOfYear * 100)}%`;
+
+        // === LIFE PROGRESS ===
+        if (this.lifeStartYear && this.lifeEndYear && this.lifeEndYear > this.lifeStartYear) {
+            const currentYear = year;
+            
+            // Calculate fractional years (including current day of year)
+            const currentYearFraction = currentYear + (dayOfYear / totalDays);
+            const lifeSpanYears = this.lifeEndYear - this.lifeStartYear;
+            const elapsedYears = currentYearFraction - this.lifeStartYear;
+            
+            const percentElapsedOfLife = clamp(elapsedYears / lifeSpanYears, 0, 1);
+            const percentRemainingOfLife = 1 - percentElapsedOfLife;
+            
+            this.lifeBar.style = `width: ` + mapNumber(
+                this.showElapsed ? percentElapsedOfLife : percentRemainingOfLife,
+                0, 1, 0.0, this.width - 0.15
+            ) + `em; height: ` + this.height + `em; border-radius: ` + 
+            (this.circular ? 1 : 0.15) + 'em;';
+
+            this.updateLifePie((this.showElapsed ? percentElapsedOfLife : percentRemainingOfLife) * (Math.PI * 2.0));
+
+            const yearsElapsed = Math.floor(elapsedYears);
+            const yearsRemaining = Math.max(0, Math.floor(lifeSpanYears - elapsedYears));
+            this.lifeElapsedValue.text = `${yearsElapsed} years | ${Math.round(percentElapsedOfLife * 100)}%`;
+            this.lifeRemainingValue.text = `${yearsRemaining} years | ${Math.round(percentRemainingOfLife * 100)}%`;
+        } else {
+            // Invalid configuration
+            this.lifeBar.style = `width: 0em; height: ` + this.height + `em;`;
+            this.updateLifePie(0);
+            this.lifeElapsedValue.text = 'Configure in settings';
+            this.lifeRemainingValue.text = 'Configure in settings';
+        }
 
         this.applyPosition();
     }
 
-    updatePie(angle) {
-        this.pie.set_angle(angle);
+    updateDayPie(angle) {
+        this.dayPie.set_angle(angle);
+    }
+
+    updateYearPie(angle) {
+        this.yearPie.set_angle(angle);
+    }
+
+    updateLifePie(angle) {
+        this.lifePie.set_angle(angle);
     }
 
     // Mostly copied from Noiseclapper@JordanViknar
@@ -394,6 +693,14 @@ export default class DayProgress extends Extension {
         if (this.showElapsedHandle) {
             this._settings.disconnect(this.showElapsedHandle);
             this.showElapsedHandle = null;
+        }
+        if (this.showYearProgressHandle) {
+            this._settings.disconnect(this.showYearProgressHandle);
+            this.showYearProgressHandle = null;
+        }
+        if (this.showLifeProgressHandle) {
+            this._settings.disconnect(this.showLifeProgressHandle);
+            this.showLifeProgressHandle = null;
         }
         if (this.widthHandle) {
             this._settings.disconnect(this.widthHandle);
@@ -423,6 +730,14 @@ export default class DayProgress extends Extension {
             this._settings.disconnect(this.resetMinuteHandle);
             this.resetMinuteHandle = null;
         }
+        if (this.lifeStartYearHandle) {
+            this._settings.disconnect(this.lifeStartYearHandle);
+            this.lifeStartYearHandle = null;
+        }
+        if (this.lifeEndYearHandle) {
+            this._settings.disconnect(this.lifeEndYearHandle);
+            this.lifeEndYearHandle = null;
+        }
         if (this.panelPositionHandle) {
             this._settings.disconnect(this.panelPositionHandle);
             this.panelPositionHandle = null;
@@ -432,32 +747,86 @@ export default class DayProgress extends Extension {
             this.panelIndexHandle = null;
         }
 
-        this.remainingValue?.destroy();
-        this.remainingValue = null;
-        this.elapsedValue?.destroy();
-        this.elapsedValue = null;
-        this.remainingLabel?.destroy();
-        this.remainingLabel = null;
-        this.elapsedLabel?.destroy();
-        this.elapsedLabel = null;
-        this.menuRemainingContainer?.destroy();
-        this.menuRemainingContainer = null;
-        this.menuElapsedContainer?.destroy();
-        this.menuElapsedContainer = null;
-        this.bar?.destroy();
-        this.bar = null;
-        this.border?.destroy();
-        this.border = null;
-        this.pie?.destroy();
-        this.pie = null;
-        this.container?.destroy();
-        this.container = null;
-        this.box?.destroy();
-        this.box = null;
+        // Destroy day elements
+        this.dayRemainingValue?.destroy();
+        this.dayRemainingValue = null;
+        this.dayElapsedValue?.destroy();
+        this.dayElapsedValue = null;
+        this.dayRemainingLabel?.destroy();
+        this.dayRemainingLabel = null;
+        this.dayElapsedLabel?.destroy();
+        this.dayElapsedLabel = null;
+        this.menuDayRemainingContainer?.destroy();
+        this.menuDayRemainingContainer = null;
+        this.menuDayElapsedContainer?.destroy();
+        this.menuDayElapsedContainer = null;
+        this.dayBar?.destroy();
+        this.dayBar = null;
+        this.dayBorder?.destroy();
+        this.dayBorder = null;
+        this.dayPie?.destroy();
+        this.dayPie = null;
+        this.dayContainer?.destroy();
+        this.dayContainer = null;
+        this.dayBox?.destroy();
+        this.dayBox = null;
+
+        // Destroy year elements
+        this.yearRemainingValue?.destroy();
+        this.yearRemainingValue = null;
+        this.yearElapsedValue?.destroy();
+        this.yearElapsedValue = null;
+        this.yearRemainingLabel?.destroy();
+        this.yearRemainingLabel = null;
+        this.yearElapsedLabel?.destroy();
+        this.yearElapsedLabel = null;
+        this.menuYearRemainingContainer?.destroy();
+        this.menuYearRemainingContainer = null;
+        this.menuYearElapsedContainer?.destroy();
+        this.menuYearElapsedContainer = null;
+        this.yearBar?.destroy();
+        this.yearBar = null;
+        this.yearBorder?.destroy();
+        this.yearBorder = null;
+        this.yearPie?.destroy();
+        this.yearPie = null;
+        this.yearContainer?.destroy();
+        this.yearContainer = null;
+        this.yearBox?.destroy();
+        this.yearBox = null;
+
+        // Destroy life elements
+        this.lifeRemainingValue?.destroy();
+        this.lifeRemainingValue = null;
+        this.lifeElapsedValue?.destroy();
+        this.lifeElapsedValue = null;
+        this.lifeRemainingLabel?.destroy();
+        this.lifeRemainingLabel = null;
+        this.lifeElapsedLabel?.destroy();
+        this.lifeElapsedLabel = null;
+        this.menuLifeRemainingContainer?.destroy();
+        this.menuLifeRemainingContainer = null;
+        this.menuLifeElapsedContainer?.destroy();
+        this.menuLifeElapsedContainer = null;
+        this.lifeBar?.destroy();
+        this.lifeBar = null;
+        this.lifeBorder?.destroy();
+        this.lifeBorder = null;
+        this.lifePie?.destroy();
+        this.lifePie = null;
+        this.lifeContainer?.destroy();
+        this.lifeContainer = null;
+        this.lifeBox?.destroy();
+        this.lifeBox = null;
+
+        this.mainBox?.destroy();
+        this.mainBox = null;
         this._indicator?.destroy();
         this._indicator = null;
 
         this.showElapsed = null;
+        this.showYearProgress = null;
+        this.showLifeProgress = null;
         this.circular = null;
         this.width = null;
         this.height = null;
@@ -466,6 +835,8 @@ export default class DayProgress extends Extension {
         this.startMinute = null;
         this.resetHour = null;
         this.resetMinute = null;
+        this.lifeStartYear = null;
+        this.lifeEndYear = null;
         this.panelPosition = null;
         this.panelIndex = null;
 
