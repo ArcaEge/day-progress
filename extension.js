@@ -293,7 +293,7 @@ export default class DayProgress extends Extension {
         this.lifeContainer.add_child(this.lifeBorder);
         this.lifeBorder.add_child(this.lifeBar);
 
-        // Add all boxes to main vertical box
+        // Add all boxes to main box
         this.mainBox.add_child(this.dayBox);
         this.mainBox.add_child(this.yearBox);
         this.mainBox.add_child(this.lifeBox);
@@ -403,6 +403,13 @@ export default class DayProgress extends Extension {
             this.updateBars();
         });
 
+        // Stack direction
+        this.stackDirectionHandle = this._settings.connect('changed::stack-direction', (settings, key) => {
+            this.stackDirection = settings.get_string(key);
+            this.mainBox.vertical = this.stackDirection === 'vertical';
+            this.updateBars();
+        });
+
         // Width
         this.widthHandle = this._settings.connect('changed::width', (settings, key) => {
             this.width = settings.get_int(key) / 5;
@@ -449,6 +456,19 @@ export default class DayProgress extends Extension {
         this.resetMinute = this._settings.get_int('reset-minute');
         this.resetMinuteHandle = this._settings.connect('changed::reset-minute', (settings, key) => {
             this.resetMinute = settings.get_int(key);
+            this.updateBars();
+        });
+
+        // Year start date
+        this.yearStartMonth = this._settings.get_int('year-start-month');
+        this.yearStartMonthHandle = this._settings.connect('changed::year-start-month', (settings, key) => {
+            this.yearStartMonth = settings.get_int(key);
+            this.updateBars();
+        });
+
+        this.yearStartDay = this._settings.get_int('year-start-day');
+        this.yearStartDayHandle = this._settings.connect('changed::year-start-day', (settings, key) => {
+            this.yearStartDay = settings.get_int(key);
             this.updateBars();
         });
 
@@ -609,9 +629,22 @@ export default class DayProgress extends Extension {
         const isLeapYear = new Date(year, 1, 29).getDate() === 29;
         const totalDays = isLeapYear ? 366 : 365;
 
-        const percentElapsedOfYear = dayOfYear / totalDays;
+        // Calculate custom year start (e.g., fiscal year)
+        const yearStartDate = GLib.DateTime.new_local(year, this.yearStartMonth, this.yearStartDay, 0, 0, 0);
+        const yearStartDayOfYear = yearStartDate.get_day_of_year();
+        
+        // Adjust current day relative to custom year start
+        let adjustedDayOfYear;
+        if (dayOfYear >= yearStartDayOfYear) {
+            adjustedDayOfYear = dayOfYear - yearStartDayOfYear + 1;
+        } else {
+            // We're in the next calendar year but same custom year
+            adjustedDayOfYear = (totalDays - yearStartDayOfYear + 1) + dayOfYear;
+        }
+
+        const percentElapsedOfYear = adjustedDayOfYear / totalDays;
         const percentRemainingOfYear = 1 - percentElapsedOfYear;
-        const daysRemaining = totalDays - dayOfYear;
+        const daysRemaining = totalDays - adjustedDayOfYear;
 
         this.yearBar.style = `width: ` + mapNumber(
             this.showElapsed ? percentElapsedOfYear : percentRemainingOfYear,
@@ -621,7 +654,7 @@ export default class DayProgress extends Extension {
 
         this.updateYearPie((this.showElapsed ? percentElapsedOfYear : percentRemainingOfYear) * (Math.PI * 2.0));
 
-        const elapsedDays = dayOfYear;
+        const elapsedDays = adjustedDayOfYear;
         this.yearElapsedValue.text = `${elapsedDays} days | ${Math.round(percentElapsedOfYear * 100)}%`;
         this.yearRemainingValue.text = `${daysRemaining} days | ${Math.round(percentRemainingOfYear * 100)}%`;
 
@@ -705,6 +738,10 @@ export default class DayProgress extends Extension {
             this._settings.disconnect(this.showLifeProgressHandle);
             this.showLifeProgressHandle = null;
         }
+        if (this.stackDirectionHandle) {
+            this._settings.disconnect(this.stackDirectionHandle);
+            this.stackDirectionHandle = null;
+        }
         if (this.widthHandle) {
             this._settings.disconnect(this.widthHandle);
             this.widthHandle = null;
@@ -732,6 +769,14 @@ export default class DayProgress extends Extension {
         if (this.resetMinuteHandle) {
             this._settings.disconnect(this.resetMinuteHandle);
             this.resetMinuteHandle = null;
+        }
+        if (this.yearStartMonthHandle) {
+            this._settings.disconnect(this.yearStartMonthHandle);
+            this.yearStartMonthHandle = null;
+        }
+        if (this.yearStartDayHandle) {
+            this._settings.disconnect(this.yearStartDayHandle);
+            this.yearStartDayHandle = null;
         }
         if (this.lifeStartYearHandle) {
             this._settings.disconnect(this.lifeStartYearHandle);
@@ -830,6 +875,7 @@ export default class DayProgress extends Extension {
         this.showElapsed = null;
         this.showYearProgress = null;
         this.showLifeProgress = null;
+        this.stackDirection = null;
         this.circular = null;
         this.width = null;
         this.height = null;
@@ -838,6 +884,8 @@ export default class DayProgress extends Extension {
         this.startMinute = null;
         this.resetHour = null;
         this.resetMinute = null;
+        this.yearStartMonth = null;
+        this.yearStartDay = null;
         this.lifeStartYear = null;
         this.lifeEndYear = null;
         this.panelPosition = null;
@@ -855,3 +903,4 @@ function mapNumber(number, inMin, inMax, outMin, outMax) {
 function clamp(number, min, max) {
     return Math.max(min, Math.min(number, max));
 }
+        
