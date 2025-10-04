@@ -139,15 +139,18 @@ export default class DayProgress extends Extension {
         // Get show life progress key
         this.showLifeProgress = this._settings.get_boolean('show-life-progress');
 
+        // Stack direction
+        this.stackDirection = this._settings.get_string('stack-direction');
+
         // Width
         this.width = this._settings.get_int('width') / 5;
 
         // Height
         this.height = this._settings.get_int('height') / 10;
 
-        // Create main vertical box to stack all progress bars
+        // Create main box to stack all progress bars
         this.mainBox = new St.BoxLayout({
-            vertical: true,
+            vertical: this.stackDirection === 'vertical',
             xAlign: Clutter.ActorAlign.CENTER,
             yAlign: Clutter.ActorAlign.CENTER,
         });
