@@ -38,12 +38,51 @@ export default class ExamplePreferences extends ExtensionPreferences {
         });
         page.add(resetTime);
 
+        const yearStart = new Adw.PreferencesGroup({
+            title: _('Year start date'),
+            description: _('The date when the year progress starts (e.g., fiscal year)'),
+        });
+        page.add(yearStart);
+
+        const lifeSpan = new Adw.PreferencesGroup({
+            title: _('Life span'),
+            description: _('Configure the life progress range'),
+        });
+        page.add(lifeSpan);
+
         // Elapsed
         const elapsed = new Adw.SwitchRow({
             title: _('Time Elapsed'),
             subtitle: _('Whether to show time elapsed instead of remaining'),
         });
         appearance.add(elapsed);
+
+        // Show Year Progress
+        const showYearProgress = new Adw.SwitchRow({
+            title: _('Show Year Progress'),
+            subtitle: _('Display year progress in addition to day progress'),
+        });
+        appearance.add(showYearProgress);
+
+        // Show Life Progress
+        const showLifeProgress = new Adw.SwitchRow({
+            title: _('Show Life Progress'),
+            subtitle: _('Display life progress based on start and end years'),
+        });
+        appearance.add(showLifeProgress);
+
+        // Stack Direction
+        const stackDirections = [_("Vertical"), _("Horizontal")];
+        let stackDirectionsList = new Gtk.StringList();
+        stackDirections.forEach((it) => {
+            stackDirectionsList.append(it);
+        });
+        const stackDirectionRow = new Adw.ComboRow({
+            title: _("Stack Direction"),
+            subtitle: _("How progress bars are arranged"),
+            model: stackDirectionsList
+        });
+        appearance.add(stackDirectionRow);
 
         // Width
         const width = new Adw.SpinRow({
@@ -122,6 +161,54 @@ export default class ExamplePreferences extends ExtensionPreferences {
         });
         resetTime.add(resetMinute);
 
+        // Year start month
+        const yearStartMonth = new Adw.SpinRow({
+            title: _("Start Month"),
+            subtitle: _("Month when the year starts (1=Jan, 12=Dec)"),
+            adjustment: new Gtk.Adjustment({
+                lower: 1,
+                upper: 12,
+                step_increment: 1
+            })
+        });
+        yearStart.add(yearStartMonth);
+
+        // Year start day
+        const yearStartDay = new Adw.SpinRow({
+            title: _("Start Day"),
+            subtitle: _("Day of month when the year starts"),
+            adjustment: new Gtk.Adjustment({
+                lower: 1,
+                upper: 31,
+                step_increment: 1
+            })
+        });
+        yearStart.add(yearStartDay);
+
+        // Life start year
+        const lifeStartYear = new Adw.SpinRow({
+            title: _("Start Year (Birth Year)"),
+            subtitle: _("The year you were born"),
+            adjustment: new Gtk.Adjustment({
+                lower: 1900,
+                upper: 2100,
+                step_increment: 1
+            })
+        });
+        lifeSpan.add(lifeStartYear);
+
+        // Life end year
+        const lifeEndYear = new Adw.SpinRow({
+            title: _("End Year"),
+            subtitle: _("Expected end year for life progress calculation"),
+            adjustment: new Gtk.Adjustment({
+                lower: 1900,
+                upper: 2150,
+                step_increment: 1
+            })
+        });
+        lifeSpan.add(lifeEndYear);
+
         // Panel position
         const positions = [_("Left"), _("Centre"), _("Right")];
         let optionsList = new Gtk.StringList();
@@ -150,6 +237,16 @@ export default class ExamplePreferences extends ExtensionPreferences {
         // Bind
         window._settings = this.getSettings();
         window._settings.bind('show-elapsed', elapsed, 'active', Gio.SettingsBindFlags.DEFAULT);
+        window._settings.bind('show-year-progress', showYearProgress, 'active', Gio.SettingsBindFlags.DEFAULT);
+        window._settings.bind('show-life-progress', showLifeProgress, 'active', Gio.SettingsBindFlags.DEFAULT);
+        
+        // Bind stack direction with custom handler
+        const stackDirectionValue = window._settings.get_string('stack-direction');
+        stackDirectionRow.selected = stackDirectionValue === 'horizontal' ? 1 : 0;
+        stackDirectionRow.connect('notify::selected', (widget) => {
+            window._settings.set_string('stack-direction', widget.selected === 1 ? 'horizontal' : 'vertical');
+        });
+
         window._settings.bind('width', width, 'value', Gio.SettingsBindFlags.DEFAULT);
         window._settings.bind('height', height, 'value', Gio.SettingsBindFlags.DEFAULT);
         window._settings.bind('style', styleRow, 'selected', Gio.SettingsBindFlags.DEFAULT);
@@ -159,6 +256,12 @@ export default class ExamplePreferences extends ExtensionPreferences {
 
         window._settings.bind('reset-hour', resetHour, 'value', Gio.SettingsBindFlags.DEFAULT);
         window._settings.bind('reset-minute', resetMinute, 'value', Gio.SettingsBindFlags.DEFAULT);
+
+        window._settings.bind('year-start-month', yearStartMonth, 'value', Gio.SettingsBindFlags.DEFAULT);
+        window._settings.bind('year-start-day', yearStartDay, 'value', Gio.SettingsBindFlags.DEFAULT);
+
+        window._settings.bind('life-start-year', lifeStartYear, 'value', Gio.SettingsBindFlags.DEFAULT);
+        window._settings.bind('life-end-year', lifeEndYear, 'value', Gio.SettingsBindFlags.DEFAULT);
 
         window._settings.bind('panel-position', positionRow, 'selected', Gio.SettingsBindFlags.DEFAULT);
         window._settings.bind('panel-index', panelIndex, 'value', Gio.SettingsBindFlags.DEFAULT);
