@@ -4,6 +4,12 @@
     <key name="show-elapsed" type="b">
       <default>false</default>
     </key>
+    <key name="show-year-progress" type="b">
+      <default>false</default>
+    </key>
+    <key name="show-life-progress" type="b">
+      <default>false</default>
+    </key>
     <key type="i" name="width">
         <default>15</default>
         <range min="1" max="150"/>
@@ -36,6 +42,14 @@
     <key type="i" name="reset-minute">
         <default>0</default>
         <range min="0" max="59"/>
+    </key>
+    <key type="i" name="life-start-year">
+        <default>1990</default>
+        <range min="1900" max="2100"/>
+    </key>
+    <key type="i" name="life-end-year">
+        <default>2070</default>
+        <range min="1900" max="2150"/>
     </key>
     <key name="panel-position" type="i">
 			<default>2</default>
