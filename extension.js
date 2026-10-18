@@ -150,7 +150,7 @@ export default class DayProgress extends Extension {
 
         // Create main box to stack all progress bars
         this.mainBox = new St.BoxLayout({
-            vertical: this.stackDirection === 'vertical',
+            orientation: this.stackDirection === 'vertical' ? Clutter.Orientation.VERTICAL : Clutter.Orientation.HORIZONTAL,
             xAlign: Clutter.ActorAlign.CENTER,
             yAlign: Clutter.ActorAlign.CENTER,
         });
@@ -406,7 +406,7 @@ export default class DayProgress extends Extension {
         // Stack direction
         this.stackDirectionHandle = this._settings.connect('changed::stack-direction', (settings, key) => {
             this.stackDirection = settings.get_string(key);
-            this.mainBox.vertical = this.stackDirection === 'vertical';
+            this.mainBox.orientation = this.stackDirection === 'vertical' ? Clutter.Orientation.VERTICAL : Clutter.Orientation.HORIZONTAL;
             this.updateBars();
         });
 
